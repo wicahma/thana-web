@@ -65,7 +65,6 @@ const Drawer = ({ editable, mapLayerCallback }) => {
         position="bottomright"
         onCreated={onCreated}
         onEdited={onEdited}
-        edit={{ remove: false }}
       />
     </div>
   );

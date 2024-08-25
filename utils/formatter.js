@@ -4,4 +4,11 @@ const dateTimeFormatter = (date) => {
   }).format(new Date(date));
 };
 
-export { dateTimeFormatter };
+const currencyFormatter = (amount) => {
+  return new Intl.NumberFormat("id", {
+    style: "currency",
+    currency: "IDR",
+  }).format(amount);
+};
+
+export { dateTimeFormatter, currencyFormatter };
