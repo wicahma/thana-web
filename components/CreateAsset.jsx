@@ -1,6 +1,12 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import React from "react";
-import { DropdownInput, MainInput } from "./forms";
+import { DropdownInput, MainInput, RadioInput, TextAreaInput } from "./forms";
+import {
+  BookmarkSquareIcon,
+  MapPinIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/20/solid";
 
 const CreateAsset = ({ closeCallback }) => {
   return (
@@ -132,6 +138,15 @@ const CreateAsset = ({ closeCallback }) => {
                 }}
                 className="w-full"
                 setValue={(e) => console.log(e)}
+                extraOption={
+                  <div className="bg-red-400">
+                    <MainInput
+                      name=""
+                      className="w-full"
+                      setValue={(e) => console.log(e)}
+                    />
+                  </div>
+                }
               />
             </div>
             <MainInput
@@ -167,8 +182,8 @@ const CreateAsset = ({ closeCallback }) => {
                 setValue={(e) => console.log(e)}
               />
               <MainInput
-                name="No. Legalitas"
-                placeholder={"Masukkan No. Legalitas"}
+                name="PDF Legalitas"
+                placeholder={"PDF Legalitas"}
                 className="w-full"
                 type="file"
                 setValue={(e) => console.log(e)}
@@ -195,6 +210,75 @@ const CreateAsset = ({ closeCallback }) => {
                 setValue={(e) => console.log(e)}
               />
             </div>
+            <div className="flex gap-3">
+              <RadioInput
+                name="Kasus"
+                initValues={{ true: "Ada", false: "Tidak Ada" }}
+                setValue={(e) => console.log("Result: ", e)}
+              />
+              <RadioInput
+                name="Pemanfaatan"
+                initValues={{ true: "Digunakan", false: "Tidak Digunakan" }}
+                setValue={(e) => console.log("Result: ", e)}
+              />
+              <TextAreaInput
+                name="Keterangan lainnya"
+                placeholder={"Masukkan Penggunaan"}
+                className="w-full"
+                setValue={(e) => console.log(e)}
+              />
+            </div>
+            <h3 className="text-base font-semibold pt-5">Dokumentasi</h3>
+            <div className="flex gap-3">
+              <MainInput
+                name="Foto 1"
+                type="file"
+                placeholder={"Masukkan Foto 1"}
+                className="w-full"
+                setValue={(e) => console.log(e)}
+              />
+              <MainInput
+                name="Foto 2"
+                type="file"
+                placeholder={"Masukkan Foto 2"}
+                className="w-full"
+                setValue={(e) => console.log(e)}
+              />
+            </div>
+            <div className="flex gap-3 items-center pt-5">
+              <h3 className="text-base font-semibold">Koordinat</h3>
+              <div className="bg-sky-500 flex justify-center items-center gap-1 w-fit transition-colors hover:bg-sky-600 rounded-lg px-3 py-1 text-sm font-normal cursor-pointer text-white">
+                <MapPinIcon className="h-4 aspect-auto" />
+                <p>Pilih dari peta</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <MainInput
+                  name="Latitude"
+                  placeholder={"Masukkan Latitude"}
+                  className="w-full"
+                  setValue={(e) => console.log(e)}
+                />
+                <MainInput
+                  name="Longitude"
+                  placeholder={"Masukkan Longitude"}
+                  className="w-full"
+                  setValue={(e) => console.log(e)}
+                />
+                <button className="aspect-square p-2 bg-red-500 rounded-lg h-9 text-red-100 transition-colors hover:bg-red-600 hover:text-red-200">
+                  <TrashIcon className="h-full aspect-auto" />
+                </button>
+              </div>
+              <button className="flex hover:bg-gray-400 hover:text-white transition-colors rounded-lg items-center justify-center gap-3 h-10 border text-gray-400 border-gray-400 border-dashed w-full">
+                <PlusIcon className="aspect-auto h-full " />
+                <p>Tambah Koordinat</p>
+              </button>
+            </div>
+            <button className="h-10 w-full mt-5 rounded-lg bg-sky-400 flex gap-2 text-white justify-center items-center transition-colors hover:bg-sky-500">
+              <BookmarkSquareIcon className="aspect-auto h-full py-2" />
+              <p>Buat Asset</p>
+            </button>
           </div>
         </div>
       </div>
