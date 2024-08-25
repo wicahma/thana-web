@@ -1,10 +1,6 @@
 {
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -26,9 +22,15 @@
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
-    "**/*.tsx"
-, "lib/store.js", "lib/hooks.js", "lib/createAppSlice.js", "lib/features/mentor/mentorSlice.js", "lib/features/auth/authAPI.js", "lib/features/auth/authSlice.js", "components/LoginCard.jsx", "components/NavCard.jsx"  ],
-  "exclude": [
-    "node_modules"
-  ]
+    "**/*.tsx",
+    "lib/store/store.js",
+    "lib/store/hooks.js",
+    "lib/store/createAppSlice.js",
+    "lib/store/features/mentor/mentorSlice.js",
+    "lib/store/features/auth/authAPI.js",
+    "lib/store/features/auth/authSlice.js",
+    "components/LoginCard.jsx",
+    "components/NavCard.jsx"
+  ],
+  "exclude": ["node_modules"]
 }
