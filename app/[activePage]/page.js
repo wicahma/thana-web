@@ -2,8 +2,8 @@ import {
   AdjustmentsHorizontalIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/solid";
-import LoginCard from "../components/LoginCard";
-import NavCard from "../components/NavCard";
+import LoginCard from "../../components/LoginCard";
+import NavCard from "../../components/NavCard";
 export default function Home() {
   return (
     <main className="fixed z-[1100] p-3 w-screen h-fit top-0 left-0 transition-colors text-gray-900">
