@@ -1,17 +1,10 @@
-"use client";
-import { useEffect, useState } from "react";
-import Map from "../components/map";
 import "./globals.css";
 import SideCardDetail from "../components/SideCardDetail";
-import StoreProvider from "./StoreProvider";
+import Map from "../components/map";
+import StoreProvider from "../providers/StoreProvider";
+import AlertProvider from "../providers/AlertProvider";
 
 export default function RootLayout({ children, params }) {
-  const [pos, setPos] = useState([-7.8381006, 110.3879432]);
-
-  useEffect(() => {
-    console.log("Ini paramnya", params);
-  }, [params]);
-
   return (
     <StoreProvider>
       <html lang="id">
@@ -21,11 +14,13 @@ export default function RootLayout({ children, params }) {
           <title>Phantox Negara</title>
         </head>
         <body>
-          <div className="relative">
-            <SideCardDetail />
-          </div>
-          <div className="h-full w-full">{children}</div>
-          <Map />
+          <AlertProvider>
+            <div className="relative">
+              <SideCardDetail />
+            </div>
+            <div className="h-full w-full">{children}</div>
+            <Map />
+          </AlertProvider>
         </body>
       </html>
     </StoreProvider>

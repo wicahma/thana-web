@@ -44,7 +44,7 @@ const DropdownInput = ({
         <div
           onClick={handleDropdown}
           className={`fixed top-0 z-20 left-0 w-screen h-screen ${
-            openDropdown ? "animate-fade-in block" : "animate-fade-out hidden"
+            openDropdown ? "animate-slide-in block" : "animate-slide-out hidden"
           }`}
         />
         {isRendered && (
@@ -52,7 +52,7 @@ const DropdownInput = ({
             value={value}
             key={dropdownID}
             className={`absolute z-20 top-full w-full p-1 space-y-1 bg-white border border-gray-100 rounded-lg shadow-lg ${
-              openDropdown ? "animate-fade-in" : "animate-fade-out"
+              openDropdown ? "animate-slide-in" : "animate-slide-out"
             }`}
           >
             {initValues.constructor === Object &&
