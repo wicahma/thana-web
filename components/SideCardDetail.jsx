@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from "react";
 import {
   CalendarIcon,
@@ -11,8 +12,11 @@ import {
   ChevronLeftIcon,
 } from "@heroicons/react/20/solid";
 import { currencyFormatter, dateTimeFormatter } from "../utils/formatter";
+import { useAppSelector } from "../store/hooks";
+import { selectPreviewAsset } from "../store/features/asset/assetSlice";
 
 const SideCardDetail = () => {
+  const previewAsset = useAppSelector(selectPreviewAsset);
   const [showNav, setShowNav] = useState(true);
   const [isRendered, setIsRendered] = useState(true);
 
@@ -26,7 +30,7 @@ const SideCardDetail = () => {
     }
   };
 
-  return (
+  return previewAsset.penggunaan !== "" ? (
     <div
       className={`fixed top-0 z-[1200] h-screen w-fit duration-300 transition-all py-3 ${
         showNav ? "pl-3 left-0" : "pl-0 -translate-x-full"
@@ -97,7 +101,7 @@ const SideCardDetail = () => {
         />
       </div>
     </div>
-  );
+  ) : null;
 };
 
 export default SideCardDetail;

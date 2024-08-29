@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
 import {
   ArrowDownOnSquareStackIcon,
@@ -8,19 +8,44 @@ import {
   PlusIcon,
   XMarkIcon,
 } from "@heroicons/react/20/solid";
-import { selectAssets } from "../../../store/features/asset/assetSlice";
-import { useAppSelector } from "../../../store/hooks";
+import {
+  selectAssets,
+  selectHidePanel,
+  setListAssetAsync,
+} from "../../../store/features/asset/assetSlice";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { dateTimeFormatter } from "../../../utils/formatter";
 import CreateAsset from "../../../components/CreateAsset";
+import { getListKecAsync } from "../../../store/features/kecamatan/kecamatanSlice";
+import { getListSkpdAsync } from "../../../store/features/skpd/skpdSlice";
 
 const Data = () => {
   const [extendedView, setExtendedView] = useState(false);
   const [dataEditIdentifier, setDataEditIdentifier] = useState(null);
   const assets = useAppSelector(selectAssets);
+  const isHidden = useAppSelector(selectHidePanel);
+
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(setListAssetAsync()).then((res) => {
+      console.log("RES ASSET DI DATA PAGE", res);
+    });
+    dispatch(getListSkpdAsync()).then((res) => {
+      console.log("RES SKPD DI DATA PAGE", res);
+    });
+    dispatch(getListKecAsync()).then((res) => {
+      console.log("RES KECAMATAN DI DATA PAGE", res);
+    });
+  }, []);
 
   return (
     <>
-      <div className="fixed z-[1000] text-base w-screen h-screen top-0 flex justify-end left-0 ">
+      <div
+        className={`${
+          isHidden ? "hidden overflow-hidden" : "block"
+        } fixed z-[1000] text-base w-screen h-screen top-0 flex justify-end left-0`}
+      >
         <div
           className={`bg-white shadow-lg rounded-s-xl ${
             extendedView ? "max-w-[70%]" : "max-w-[30%]"
@@ -127,13 +152,13 @@ const Data = () => {
                       {data.penggunaan}
                     </td>
                     <td className="max-w-32 border-y px-3 h-12">
-                      <p className="line-clamp-1 break-all">{data.skpd}</p>
+                      <p className="line-clamp-1 break-all">{data.skpd.nama}</p>
                     </td>
                     {extendedView ? (
                       <>
                         <td className="max-w-24 border-y px-3 h-12">
                           <p className="line-clamp-1 break-all">
-                            {data.kecamatan}
+                            {data.kecamatan.nama}
                           </p>
                         </td>
                         <td className="max-w-24 border-y px-3 h-12">
@@ -186,15 +211,17 @@ const Data = () => {
                       </>
                     )}
                     <td className="border-y h-12 max-w-fit">
-                      <button className="aspect-square p-3 h-full bg-orange-400 text-white ring-2 ring-orange-400 hover:bg-orange-500 hover:ring-orange-500 transition-colors">
-                        <PencilSquareIcon />
-                      </button>
-                      <button className="aspect-square p-3 h-full bg-red-600 text-white ring-2 ring-red-600 hover:bg-red-700 hover:ring-red-700 transition-colors">
-                        <TrashIcon />
-                      </button>
+                      <div className="flex flex-nowrap h-full aspect-[2/1]">
+                        <button className="aspect-square p-3 h-full bg-orange-400 text-white ring-2 ring-orange-400 hover:bg-orange-500 hover:ring-orange-500 transition-colors">
+                          <PencilSquareIcon />
+                        </button>
+                        <button className="aspect-square p-3 h-full bg-red-600 text-white ring-2 ring-red-600 hover:bg-red-700 hover:ring-red-700 transition-colors">
+                          <TrashIcon />
+                        </button>
+                      </div>
                     </td>
                     <td className="text-nowrap border-y px-3 h-12 border-e rounded-e-lg">
-                      {dateTimeFormatter(data.updatedAt)}
+                      {data.updatedAt && dateTimeFormatter(data.updatedAt)}
                     </td>
                   </tr>
                 ))}
