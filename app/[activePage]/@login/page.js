@@ -1,16 +1,28 @@
 "use client";
 import { ErrorMessage, Form, Formik } from "formik";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   AtSymbolIcon,
   EyeIcon,
   EyeSlashIcon,
   KeyIcon,
-  UserIcon,
 } from "@heroicons/react/24/solid";
 import * as yup from "yup";
+import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import {
+  checkAuthLoading,
+  loginAsync,
+  selectLogin,
+} from "../../../store/features/auth/authSlice";
+import { alertService } from "../../../utils/alert";
 
 const Login = () => {
+  const dispatch = useAppDispatch();
+  const { login_status } = useAppSelector(checkAuthLoading);
+  const { type } = useAppSelector(selectLogin);
+  const router = useRouter();
+
   const loginSchema = yup.object().shape({
     email: yup
       .string()
@@ -22,6 +34,26 @@ const Login = () => {
       .required("Password wajib diisi"),
   });
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleLogin = async (val, action) => {
+    dispatch(loginAsync({ email: val.email, pass: val.password })).then(
+      (res) => {
+        if (res.payload.status === true) {
+          router.replace("/");
+        } else {
+          alertService.error(res.payload.message);
+          if (res.payload.message.includes("Email")) {
+            action.setFieldError("email", res.payload.message);
+          } else {
+            action.setFieldError("password", res.payload.message);
+          }
+        }
+      }
+    );
+    return true;
+  };
+
+
   return (
     <div className="fixed flex justify-center items-center z-[500] bg-black/50 h-screen w-screen top-0 left-0">
       <div className="p-3 bg-white rounded-xl w-80">
@@ -31,10 +63,7 @@ const Login = () => {
         <Formik
           initialValues={{ email: "", password: "" }}
           validationSchema={loginSchema}
-          onSubmit={(val, action) => {
-            console.log(val);
-            return true;
-          }}
+          onSubmit={handleLogin}
           validateOnChange={true}
         >
           {({ isSubmitting, errors, values, setFieldValue }) => (
@@ -100,8 +129,12 @@ const Login = () => {
 
               <button
                 type="submit"
-                className="rounded-xl bg-orange-500 w-full py-2 text-base mt-5 transition-colors hover:bg-orange-600 text-gray-50"
+                disabled={login_status.includes("loading")}
+                className="rounded-xl disabled:bg-orange-300 flex items-center justify-center gap-2 bg-orange-500 w-full py-2 text-base mt-5 transition-colors hover:bg-orange-600 text-gray-50"
               >
+                {login_status.includes("loading") && (
+                  <div className="loader border-white" />
+                )}
                 MASUK
               </button>
             </Form>

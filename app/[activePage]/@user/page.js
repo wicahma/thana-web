@@ -1,7 +1,17 @@
+"use client";
 import { UserIcon } from "@heroicons/react/24/solid";
 import React from "react";
+import { useAppDispatch } from "../../../store/hooks";
+import { logoutAsync } from "../../../store/features/auth/authSlice";
+import { useRouter } from "next/navigation";
 
 const User = () => {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const handleLogout = () => {
+    console.log("dia jalan kah")
+    dispatch(logoutAsync()).then(() => router.replace("/"));
+  };
   return (
     <div className="fixed z-[1000] text-base w-screen h-screen top-0 flex justify-end left-0">
       <div
@@ -16,8 +26,13 @@ const User = () => {
             <p className="text-sm text-gray-500">Admin</p>
           </div>
         </div>
-        <div className="">
-
+        <div className="p-2">
+          <button
+            onClick={handleLogout}
+            className="px-3 py-1 rounded-lg bg-red-500 hover:bg-red-600 transition-colors text-white text-sm font-medium"
+          >
+            LOGOUT
+          </button>
         </div>
       </div>
     </div>
