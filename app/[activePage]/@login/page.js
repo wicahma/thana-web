@@ -58,7 +58,7 @@ const Login = () => {
     <div className="fixed flex justify-center items-center z-[500] bg-black/50 h-screen w-screen top-0 left-0">
       <div className="p-3 bg-white rounded-xl w-80">
         <h1 className="text-xl font-semibold text-center mb-3">
-          Phantox Negara
+          Phatox Negara
         </h1>
         <Formik
           initialValues={{ email: "", password: "" }}

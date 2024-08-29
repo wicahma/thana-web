@@ -11,7 +11,7 @@ export default function RootLayout({ children, params }) {
         <head>
           <meta charSet="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <title>Phantox Negara</title>
+          <title>Phatox Negara</title>
         </head>
         <body>
           <AlertProvider>

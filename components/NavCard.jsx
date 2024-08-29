@@ -14,7 +14,7 @@ const NavCard = () => {
   return (
     <div className="flex gap-3 shadow-md rounded-xl border border-gray-200 items-center duration-300 relative z-[1000] bg-white py-1 pe-1 ps-2 hover:bg-gray-100">
       <Link href="/" className="px-3 cursor-pointer transition-colors hover:bg-gray-200 rounded-md py-1">
-        <p className="text-base">Phantox</p>
+        <p className="text-base">Phatox</p>
       </Link>
       <div
         onClick={() => setShowNav(!showNav)}
