@@ -13,9 +13,18 @@ import {
 import { createRef, useEffect, useState } from "react";
 import Drawer from "./Drawer";
 import { useLeafletContext } from "@react-leaflet/core";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import {
+  selectHidePanel,
+  setMapPolygon,
+  hidePanel,
+} from "../../store/features/asset/assetSlice";
 
 const DynamicMap = () => {
   const mapRef = createRef();
+  const showEdit = useAppSelector(selectHidePanel);
+  const dispatch = useAppDispatch();
+
   // const map = useMap(mapRef);
   // const mapEvent = useMapEvent("draw:create", (d) => {
   //   console.log(d);
@@ -44,6 +53,14 @@ const DynamicMap = () => {
     layer.bindPopup(feature.geometry.coordinates);
   };
 
+  const handleCBDrawer = (data) => {
+    if (data[0]?.latlngs !== undefined) {
+      const newData = data[0]?.latlngs.map((item) => [item.lat, item.lng]);
+      dispatch(setMapPolygon({ source: "map", coordinates: newData }));
+      dispatch(hidePanel(false));
+    }
+  };
+
   return (
     <MapContainer
       center={[-3.4372166436660883, 115.679099575477]}
@@ -60,12 +77,9 @@ const DynamicMap = () => {
           onFeatureGroupReady(featureGroupRef);
         }}
       >
-        {/* <Drawer
-          editable={editableFG}
-          mapLayerCallback={(data) => {
-            console.log(data);
-          }}
-        /> */}
+        {showEdit && (
+          <Drawer editable={editableFG} mapLayerCallback={handleCBDrawer} />
+        )}
       </FeatureGroup>
     </MapContainer>
   );
