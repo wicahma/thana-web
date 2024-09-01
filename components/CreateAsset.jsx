@@ -16,14 +16,17 @@ import { selectKecamatan } from "../store/features/kecamatan/kecamatanSlice";
 import { selectSkpdData } from "../store/features/skpd/skpdSlice";
 import {
   addOnePolygon,
+  createAssetAsync,
   deleteOnePolygon,
   editMapPolygonLat,
   editMapPolygonLng,
   hidePanel,
   selectHidePanel,
   selectMapPolygon,
+  setListAssetAsync,
   setMapPolygon,
 } from "../store/features/asset/assetSlice";
+import { alertService } from "../utils/alert";
 
 const CreateAsset = ({ closeCallback }) => {
   const { type: user_type } = useAppSelector(selectLogin);
@@ -56,16 +59,33 @@ const CreateAsset = ({ closeCallback }) => {
     uraian_kasus: yup.string().required("Uraian Kasus wajib diisi"),
     pemanfaatan: yup.boolean().required("Pemanfaatan wajib diisi"),
     keterangan_lainnya: yup.string().required("Keterangan Lainnya wajib diisi"),
-    koordinats: yup.object().shape({
-      type: yup.string().required("Type wajib diisi"),
-      coordinates: yup
-        .array()
-        .of(yup.array().of(yup.array().of(yup.number().notRequired()))),
-    }),
   });
   const handleCreateAsset = async (val, action) => {
-    // dispatch(createAssetAsync(val)).then((res) => {});
+    if (user_type === "admin") {
+      delete val.legalitas;
+      delete val.tanggal_legalitas;
+      delete val.pdf_legalitas;
+      delete val.nomor_legalitas;
+    }
+    dispatch(
+      createAssetAsync({
+        ...val,
+        koordinats: {
+          type: "Polygon",
+          coordinates: [[...mapPolygon.coordinates, mapPolygon.coordinates[0]]],
+        },
+      })
+    ).then((res) => {
+      if (res.payload.status) {
+        alertService.success(res.payload.message);
+        dispatch(setListAssetAsync());
+        closeCallback(true);
+      } else {
+        alertService.error(res.payload.message);
+      }
+    });
     console.log(val);
+    console.log(action);
   };
 
   const handleHidePanel = (e) => {
@@ -74,10 +94,8 @@ const CreateAsset = ({ closeCallback }) => {
     console.log("handleHidePanel  ");
     if (isHidden) {
       setTimeout(() => dispatch(hidePanel(false)), 10);
-      // setIsRendered(true);
     } else {
       setTimeout(() => dispatch(hidePanel(true)), 10);
-      // setTimeout(() => setIsRendered(false), 300);
     }
   };
 
@@ -152,20 +170,20 @@ const CreateAsset = ({ closeCallback }) => {
         <div className="overflow-y-scroll h-full pb-32">
           <Formik
             initialValues={{
-              skpd_id: 0,
-              kecamatan_id: 0,
+              skpd_id: undefined,
+              kecamatan_id: undefined,
               penggunaan: "",
               no_kib: "",
               kode_barang: "",
               uraian: "",
               tanggal_perolehan: "",
-              luas: 0,
+              luas: undefined,
               alamat: "",
               legalitas: "",
               tanggal_legalitas: "",
               nomor_legalitas: "",
-              asal_usul: "",
-              harga: 0,
+              asal_usul: undefined,
+              harga: undefined,
               keterangan: "",
               kategori: "",
               fungsi: "",
@@ -176,10 +194,6 @@ const CreateAsset = ({ closeCallback }) => {
               keterangan_lainnya: "",
               foto_1: "",
               foto_2: "",
-              koordinats: {
-                type: "Polygon",
-                coordinates: [[[], []]],
-              },
             }}
             validationSchema={assetSchema}
             onSubmit={handleCreateAsset}
@@ -195,6 +209,7 @@ const CreateAsset = ({ closeCallback }) => {
                     value={values.penggunaan}
                     placeholder={"Masukkan Tujuan Penggunaan"}
                     setValue={(e) => setFieldValue("penggunaan", e)}
+                    error={errors.penggunaan}
                   />
                   <div className="flex gap-3">
                     <DropdownInput
@@ -206,6 +221,7 @@ const CreateAsset = ({ closeCallback }) => {
                         skpd.find((val) => val.id === values.skpd_id)?.nama
                       }
                       setValue={(e) => setFieldValue("skpd_id", e)}
+                      error={errors.skpd_id}
                     />
                     <MainInput
                       name="No. KIB"
@@ -213,6 +229,7 @@ const CreateAsset = ({ closeCallback }) => {
                       placeholder={"Masukkan No. KIB"}
                       className="w-full"
                       setValue={(e) => setFieldValue("no_kib", e)}
+                      error={errors.no_kib}
                     />
                   </div>
                   <div className="flex gap-3">
@@ -222,6 +239,7 @@ const CreateAsset = ({ closeCallback }) => {
                       className="w-full"
                       setValue={(e) => setFieldValue("kode_barang", e)}
                       value={values.kode_barang}
+                      error={errors.kode_barang}
                     />
                     <MainInput
                       name="Uraian"
@@ -229,6 +247,7 @@ const CreateAsset = ({ closeCallback }) => {
                       className="w-full"
                       setValue={(e) => setFieldValue("uraian", e)}
                       value={values.uraian}
+                      error={errors.uraian}
                     />
                   </div>
                   <div className="flex gap-3">
@@ -239,13 +258,15 @@ const CreateAsset = ({ closeCallback }) => {
                       type="date"
                       setValue={(e) => setFieldValue("tanggal_perolehan", e)}
                       value={values.tanggal_perolehan}
+                      error={errors.tanggal_perolehan}
                     />
                     <MainInput
                       name="Luas"
                       placeholder={"Masukkan Luas"}
                       className="w-full"
-                      type="number"
                       setValue={(e) => setFieldValue("luas", e)}
+                      value={values.luas}
+                      error={errors.luas}
                     />
                   </div>
                   <MainInput
@@ -254,22 +275,39 @@ const CreateAsset = ({ closeCallback }) => {
                     className="w-full"
                     setValue={(e) => setFieldValue("alamat", e)}
                     value={values.alamat}
+                    error={errors.alamat}
                   />
                   <div className="flex gap-3">
                     <DropdownInput
                       name="Asal Usul"
-                      initValues={{ 1: "Januari", 2: "Februari", 3: "Maret" }}
+                      displayValues={[
+                        "Beli",
+                        "Hibah",
+                        "Sewa",
+                        "Pinjam",
+                        "Pengadaan",
+                        "Lainnya",
+                      ]}
+                      keyValues={[
+                        "Beli",
+                        "Hibah",
+                        "Sewa",
+                        "Pinjam",
+                        "Pengadaan",
+                        "Lainnya",
+                      ]}
                       className="w-full"
                       setValue={(e) => setFieldValue("asal_usul", e)}
                       value={values.asal_usul}
+                      error={errors.asal_usul}
                     />
                     <MainInput
                       name="Harga"
                       placeholder={"Masukkan Luas"}
                       className="w-full"
-                      type="number"
                       setValue={(e) => setFieldValue("harga", e)}
                       value={values.harga}
+                      error={errors.harga}
                     />
                   </div>
                   <div className="flex gap-3">
@@ -279,6 +317,7 @@ const CreateAsset = ({ closeCallback }) => {
                       className="w-full"
                       setValue={(e) => setFieldValue("desa", e)}
                       value={values.desa}
+                      error={errors.desa}
                     />
                     <DropdownInput
                       name="Kecamatan"
@@ -290,6 +329,7 @@ const CreateAsset = ({ closeCallback }) => {
                         kecamatan.find((val) => val.id === values.kecamatan_id)
                           ?.nama
                       }
+                      error={errors.kecamatan_id}
                       extraOption={
                         <div className="ps-1 mb-5">
                           <MainInput
@@ -307,6 +347,7 @@ const CreateAsset = ({ closeCallback }) => {
                     className="w-full"
                     setValue={(e) => setFieldValue("keterangan", e)}
                     value={values.keterangan}
+                    error={errors.keterangan}
                   />
                   <div
                     className={`rounded-lg p-2 ${
@@ -336,6 +377,7 @@ const CreateAsset = ({ closeCallback }) => {
                         value={values.legalitas}
                         className="w-full"
                         setValue={(e) => setFieldValue("legalitas", e)}
+                        error={errors.legalitas}
                       />
                       <MainInput
                         disabled={user_type === "admin"}
@@ -344,6 +386,7 @@ const CreateAsset = ({ closeCallback }) => {
                         type="date"
                         setValue={(e) => setFieldValue("tanggal_legalitas", e)}
                         value={values.tanggal_legalitas}
+                        error={errors.tanggal_legalitas}
                       />
                     </div>
                     <div className="flex gap-3">
@@ -354,6 +397,7 @@ const CreateAsset = ({ closeCallback }) => {
                         className="w-full"
                         setValue={(e) => setFieldValue("nomor_legalitas", e)}
                         value={values.nomor_legalitas}
+                        error={errors.nomor_legalitas}
                       />
                       <MainInput
                         disabled={user_type === "admin"}
@@ -386,6 +430,7 @@ const CreateAsset = ({ closeCallback }) => {
                       "Lainnya",
                     ]}
                     value={values.kategori}
+                    error={errors.kategori}
                     className="w-full"
                     setValue={(e) => setFieldValue("kategori", e)}
                   />
@@ -396,6 +441,7 @@ const CreateAsset = ({ closeCallback }) => {
                       keyValues={[true, false]}
                       setValue={(e) => setFieldValue("kasus", e)}
                       value={values.kasus}
+                      error={errors.kasus}
                     />
                     <RadioInput
                       name="Pemanfaatan"
@@ -403,6 +449,7 @@ const CreateAsset = ({ closeCallback }) => {
                       keyValues={[true, false]}
                       setValue={(e) => setFieldValue("pemanfaatan", e)}
                       value={values.pemanfaatan}
+                      error={errors.pemanfaatan}
                     />
                     <TextAreaInput
                       name="Keterangan lainnya"
@@ -410,6 +457,7 @@ const CreateAsset = ({ closeCallback }) => {
                       className="w-full"
                       setValue={(e) => setFieldValue("keterangan_lainnya", e)}
                       value={values.keterangan_lainnya}
+                      error={errors.keterangan_lainnya}
                     />
                   </div>
                   <DropdownInput
@@ -439,6 +487,7 @@ const CreateAsset = ({ closeCallback }) => {
                       "Data Awal belum sesuai kondisi Riil",
                     ]}
                     value={values.uraian_kasus}
+                    error={errors.uraian_kasus}
                     className="w-full"
                     setValue={(e) => setFieldValue("uraian_kasus", e)}
                   />
@@ -525,7 +574,11 @@ const CreateAsset = ({ closeCallback }) => {
                               className="w-full"
                               value={val[0]}
                               disabled={true}
-                              setValue={(e) => console.log(e)}
+                              setValue={(e) => {
+                                dispatch(
+                                  editMapPolygonLat({ index: i, lat: e })
+                                );
+                              }}
                             />
                             <MainInput
                               name="Longitude"
@@ -533,7 +586,12 @@ const CreateAsset = ({ closeCallback }) => {
                               className="w-full"
                               value={val[1]}
                               disabled={true}
-                              setValue={(e) => console.log(e)}
+                              setValue={(e) => {
+                                dispatch(
+                                  editMapPolygonLng({ index: i, lng: e })
+                                );
+                              }}
+                              s
                             />
                           </div>
                         ))}
@@ -546,7 +604,10 @@ const CreateAsset = ({ closeCallback }) => {
                       <p>Tambah Koordinat</p>
                     </button>
                   </div>
-                  <button className="h-10 w-full mt-5 rounded-lg bg-sky-400 flex gap-2 text-white justify-center items-center transition-colors hover:bg-sky-500">
+                  <button
+                    type="submit"
+                    className="h-10 w-full mt-5 rounded-lg bg-sky-400 flex gap-2 text-white justify-center items-center transition-colors hover:bg-sky-500"
+                  >
                     <BookmarkSquareIcon className="aspect-auto h-full py-2" />
                     <p>Buat Asset</p>
                   </button>
