@@ -13,6 +13,21 @@ export const getList = async () => {
   return result;
 };
 
+export const getAll = async () => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}api/asset/all`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("access")}`,
+      },
+    }
+  );
+  const result = await response.json();
+  return result;
+};
+
 export const getDashbard = async () => {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}api/asset/dashboard`,

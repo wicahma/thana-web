@@ -2,7 +2,9 @@ import { createAppSlice } from "../../createAppSlice";
 import {
   createAsset,
   deleteAsset,
+  detailAdmin,
   detailGuest,
+  getAll,
   getDashbard,
   getList,
   updateAsset,
@@ -327,6 +329,7 @@ const initialState = {
   is_panel_hide: false,
   api_status: {
     get_asset_status: "idle",
+    get_all_asset_status: "idle",
     create_asset_status: "idle",
     update_asset_status: "idle",
     delete_asset_status: "idle",
@@ -361,6 +364,7 @@ const initialState = {
     updatedAt: "",
   },
   assets: [],
+  allAssets: [],
   dashboard: {
     asalUsul: [],
     legalitas: [],
@@ -371,7 +375,7 @@ const initialState = {
   },
   mapPolygon: {
     source: "manual",
-    coordinates: [],
+    coordinates: [[0, 0]],
   },
 };
 
@@ -379,6 +383,10 @@ export const assetSlice = createAppSlice({
   name: "asset",
   initialState,
   reducers: (create) => ({
+    resetPreviewAsset: create.reducer((state) => {
+      state.previewAsset = initialState.previewAsset;
+    }),
+
     setGuestPreviewAsync: create.asyncThunk(
       async (data) => {
         const response = await detailGuest(data);
@@ -390,7 +398,7 @@ export const assetSlice = createAppSlice({
         },
         fulfilled: (state, action) => {
           state.previewAsset.status = "idle";
-          state.previewAsset = action.payload.data;
+          state.previewAsset = action.payload.data[0];
         },
         rejected: (state) => {
           state.previewAsset.status = "failed";
@@ -408,7 +416,7 @@ export const assetSlice = createAppSlice({
         },
         fulfilled: (state, action) => {
           state.previewAsset.status = "idle";
-          state.previewAsset = action.payload.data;
+          state.previewAsset = action.payload.data[0];
         },
         rejected: (state) => {
           state.previewAsset.status = "failed";
@@ -430,6 +438,24 @@ export const assetSlice = createAppSlice({
         },
         rejected: (state) => {
           state.api_status.get_asset_status = "failed";
+        },
+      }
+    ),
+    setAllAssetAsync: create.asyncThunk(
+      async () => {
+        const response = await getAll();
+        return response;
+      },
+      {
+        pending: (state) => {
+          state.api_status.get_all_asset_status = "loading";
+        },
+        fulfilled: (state, action) => {
+          state.api_status.get_all_asset_status = "idle";
+          state.allAssets = action.payload.data;
+        },
+        rejected: (state) => {
+          state.api_status.get_all_asset_status = "failed";
         },
       }
     ),
@@ -535,6 +561,7 @@ export const assetSlice = createAppSlice({
   selectors: {
     selectPreviewAsset: (state) => state.previewAsset,
     selectAssets: (state) => state.assets,
+    selectAllAssets: (state) => state.allAssets,
     checkAssetLoading: (state) => state.api_status,
     selectDashboard: (state) => state.dashboard,
     selectAssetSertifikat: (state) =>
@@ -564,6 +591,8 @@ export const {
   editMapPolygonLng,
   addOnePolygon,
   deleteOnePolygon,
+  setAllAssetAsync,
+  resetPreviewAsset,
 } = assetSlice.actions;
 
 export const {
@@ -575,4 +604,5 @@ export const {
   selectAssetNonSertifikat,
   selectHidePanel,
   selectMapPolygon,
+  selectAllAssets,
 } = assetSlice.selectors;
