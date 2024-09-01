@@ -9,22 +9,33 @@ import {
   FeatureGroup,
   useMap,
   useMapEvent,
+  Polygon,
 } from "react-leaflet";
 import { createRef, useEffect, useState } from "react";
 import Drawer from "./Drawer";
 import { useLeafletContext } from "@react-leaflet/core";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import {
+  selectHidePanel,
+  setMapPolygon,
+  hidePanel,
+  selectAssets,
+  setAdminPreviewAsync,
+  setGuestPreviewAsync,
+} from "../../store/features/asset/assetSlice";
+import { selectLogin } from "../../store/features/auth/authSlice";
 
 const DynamicMap = () => {
   const mapRef = createRef();
-  // const map = useMap(mapRef);
-  // const mapEvent = useMapEvent("draw:create", (d) => {
-  //   console.log(d);
-  // });
+  const showEdit = useAppSelector(selectHidePanel);
+  const dispatch = useAppDispatch();
+  const assets = useAppSelector(selectAssets);
+  const { type: user_type } = useAppSelector(selectLogin);
+  const [map, setMap] = useState(null);
 
   const [editableFG, setEditableFG] = useState(null);
 
   const onFeatureGroupReady = (reactFGref) => {
-    // store the ref for future access to content
     setEditableFG(reactFGref);
   };
 
@@ -44,11 +55,21 @@ const DynamicMap = () => {
     layer.bindPopup(feature.geometry.coordinates);
   };
 
+  const handleCBDrawer = (data) => {
+    if (data[0]?.latlngs !== undefined) {
+      const newData = data[0]?.latlngs.map((item) => [item.lat, item.lng]);
+      dispatch(setMapPolygon({ source: "map", coordinates: newData }));
+      dispatch(hidePanel(false));
+    }
+  };
+
+  const polyOption = { color: "purple" };
+
   return (
     <MapContainer
       center={[-3.4372166436660883, 115.679099575477]}
       zoom={11}
-      ref={mapRef}
+      ref={setMap}
       className="w-screen h-screen"
     >
       <TileLayer
@@ -60,13 +81,26 @@ const DynamicMap = () => {
           onFeatureGroupReady(featureGroupRef);
         }}
       >
-        {/* <Drawer
-          editable={editableFG}
-          mapLayerCallback={(data) => {
-            console.log(data);
-          }}
-        /> */}
+        {showEdit && (
+          <Drawer editable={editableFG} mapLayerCallback={handleCBDrawer} />
+        )}
       </FeatureGroup>
+      {assets.map((item, i) => (
+        <Polygon
+          key={i}
+          pathOptions={polyOption}
+          eventHandlers={{
+            click: () => {
+              if (user_type === "guest") {
+                dispatch(setGuestPreviewAsync(item.uuid));
+              } else {
+                dispatch(setAdminPreviewAsync(item.uuid));
+              }
+            },
+          }}
+          positions={item.koordinats.coordinates}
+        />
+      ))}
     </MapContainer>
   );
 };

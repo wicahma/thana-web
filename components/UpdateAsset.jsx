@@ -28,7 +28,7 @@ import {
 } from "../store/features/asset/assetSlice";
 import { alertService } from "../utils/alert";
 
-const CreateAsset = ({ closeCallback }) => {
+const UpdateAsset = ({ closeCallback }) => {
   const { type: user_type } = useAppSelector(selectLogin);
   const [isRendered, setIsRendered] = useState(true);
   const dispatch = useAppDispatch();
@@ -70,10 +70,7 @@ const CreateAsset = ({ closeCallback }) => {
     dispatch(
       createAssetAsync({
         ...val,
-        koordinats: {
-          type: "Polygon",
-          coordinates: [[...mapPolygon.coordinates, mapPolygon.coordinates[0]]],
-        },
+        koordinats: { coordinates: mapPolygon, type: "Polygon" },
       })
     ).then((res) => {
       if (res.payload.status) {
@@ -609,7 +606,7 @@ const CreateAsset = ({ closeCallback }) => {
                     className="h-10 w-full mt-5 rounded-lg bg-sky-400 flex gap-2 text-white justify-center items-center transition-colors hover:bg-sky-500"
                   >
                     <BookmarkSquareIcon className="aspect-auto h-full py-2" />
-                    <p>Buat Asset</p>
+                    <p>Update Asset</p>
                   </button>
                 </div>
               </Form>
@@ -621,4 +618,4 @@ const CreateAsset = ({ closeCallback }) => {
   );
 };
 
-export default CreateAsset;
+export default UpdateAsset;

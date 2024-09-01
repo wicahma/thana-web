@@ -1,10 +1,28 @@
+"use client";
 import {
   AdjustmentsHorizontalIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/solid";
 import LoginCard from "../../components/LoginCard";
 import NavCard from "../../components/NavCard";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { useEffect, useState } from "react";
+import { checkToken, selectLogin } from "../../store/features/auth/authSlice";
+import { usePathname, useRouter } from "next/navigation";
+import { setListAssetAsync } from "../../store/features/asset/assetSlice";
+
 export default function Home() {
+  const { type } = useAppSelector(selectLogin);
+  const dispatch = useAppDispatch();
+  const [isLogin, setIsLogin] = useState(false);
+  
+  useEffect(() => {
+    if (type === "admin" || type === "superadmin") {
+      setIsLogin(true);
+    }
+    dispatch(setListAssetAsync());
+  }, [type]);
+
   return (
     <main className="fixed z-[1100] p-3 w-screen h-fit top-0 left-0 transition-colors text-gray-900">
       <div className="flex justify-between">
@@ -25,7 +43,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="h-fit">{false ? <LoginCard /> : <NavCard />}</div>
+        <div className="h-fit">{isLogin ? <NavCard /> : <LoginCard />}</div>
       </div>
     </main>
   );
