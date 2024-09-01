@@ -34,6 +34,8 @@ export default function NavLayout({
     }
   }, [path]);
 
+  
+
   return (
     <>
       <div className="h-full w-full">

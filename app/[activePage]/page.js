@@ -9,15 +9,18 @@ import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { useEffect, useState } from "react";
 import { checkToken, selectLogin } from "../../store/features/auth/authSlice";
 import { usePathname, useRouter } from "next/navigation";
+import { setListAssetAsync } from "../../store/features/asset/assetSlice";
 
 export default function Home() {
   const { type } = useAppSelector(selectLogin);
-  const router = useRouter();
+  const dispatch = useAppDispatch();
   const [isLogin, setIsLogin] = useState(false);
+  
   useEffect(() => {
     if (type === "admin" || type === "superadmin") {
       setIsLogin(true);
     }
+    dispatch(setListAssetAsync());
   }, [type]);
 
   return (

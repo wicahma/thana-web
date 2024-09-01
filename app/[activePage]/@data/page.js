@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
 import {
   ArrowDownOnSquareStackIcon,
@@ -11,6 +11,7 @@ import {
 import {
   selectAssets,
   selectHidePanel,
+  setAllAssetAsync,
   setListAssetAsync,
 } from "../../../store/features/asset/assetSlice";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
@@ -18,12 +19,22 @@ import { dateTimeFormatter } from "../../../utils/formatter";
 import CreateAsset from "../../../components/CreateAsset";
 import { getListKecAsync } from "../../../store/features/kecamatan/kecamatanSlice";
 import { getListSkpdAsync } from "../../../store/features/skpd/skpdSlice";
+import { generate } from "csv-generate";
+import { json2csv } from "json-2-csv";
+import { selectLogin } from "../../../store/features/auth/authSlice";
+import { downloadBlob } from "../../../utils/downloader";
+import { parse } from "csv-parse";
+import ModalImportData from "../../../components/modals/ModalImportData";
+import ModalDeleteAsset from "../../../components/modals/ModalDeleteAsset";
 
 const Data = () => {
   const [extendedView, setExtendedView] = useState(false);
   const [dataEditIdentifier, setDataEditIdentifier] = useState(null);
   const assets = useAppSelector(selectAssets);
+  const { type } = useAppSelector(selectLogin);
   const isHidden = useAppSelector(selectHidePanel);
+  const [importedData, setImportedData] = useState([]);
+  const [deleteId, setDeleteId] = useState(null);
 
   const dispatch = useAppDispatch();
 
@@ -38,6 +49,66 @@ const Data = () => {
       console.log("RES KECAMATAN DI DATA PAGE", res);
     });
   }, []);
+
+  const handleExportData = () => {
+    try {
+      dispatch(setAllAssetAsync()).then((res) => {
+        let assetData = res.payload.data;
+        if (type === "admin") {
+          assetData = assetData.map((data, i) => {
+            return {
+              ...data,
+              pdf_legalitas: data.pdf_legalitas ? "Ada" : "Tidak ada",
+            };
+          });
+        }
+        const csv = json2csv(assetData);
+        downloadBlob(csv, "data_asset.csv", "text/csv");
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleImportData = () => {
+    setImportedData([]);
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".csv";
+    fileInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const csv = e.target.result;
+        const data = parse(
+          csv,
+          {
+            columns: true,
+            group_columns_by_name: true,
+            cast: (val, ctx) => {
+              let def = val;
+              if (ctx.column === "koordinats.coordinates") {
+                def = JSON.parse(val);
+              }
+              return def;
+            },
+          },
+          (err, data) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+            return data;
+          }
+        );
+        data.on("data", (row) => {
+          setImportedData((prev) => [...prev, row]);
+        });
+      };
+      reader.readAsText(file);
+    };
+    fileInput.click();
+  };
 
   return (
     <>
@@ -61,11 +132,17 @@ const Data = () => {
               }`}
             >
               <div className="flex gap-2 w-full flex-nowrap h-1/2 justify-between">
-                <button className="bg-gray-600 h-full rounded-lg grow transition-colors hover:bg-gray-700 flex justify-center items-center">
+                <button
+                  onClick={handleImportData}
+                  className="bg-gray-600 h-full rounded-lg grow transition-colors hover:bg-gray-700 flex justify-center items-center"
+                >
                   <ArrowDownOnSquareStackIcon className="aspect-auto h-full p-2" />
                   <p>Import Data</p>
                 </button>
-                <button className="bg-gray-600 rounded-lg grow transition-colors hover:bg-gray-700 flex justify-center items-center">
+                <button
+                  onClick={handleExportData}
+                  className="bg-gray-600 rounded-lg grow transition-colors hover:bg-gray-700 flex justify-center items-center"
+                >
                   <ArrowUpOnSquareStackIcon className="aspect-auto h-full p-2" />
                   <p>Export Data</p>
                 </button>
@@ -84,11 +161,17 @@ const Data = () => {
                 extendedView ? "h-16 p-3" : "h-0 p-0"
               }`}
             >
-              <button className="bg-gray-600 rounded-lg w-full h-full transition-colors hover:bg-gray-700 flex justify-center items-center">
+              <button
+                onClick={handleImportData}
+                className="bg-gray-600 rounded-lg w-full h-full transition-colors hover:bg-gray-700 flex justify-center items-center"
+              >
                 <ArrowDownOnSquareStackIcon className="aspect-auto h-full p-2" />
                 <p>Import Data</p>
               </button>
-              <button className="bg-gray-600 rounded-lg w-full h-full transition-colors hover:bg-gray-700 flex justify-center items-center">
+              <button
+                onClick={handleExportData}
+                className="bg-gray-600 rounded-lg w-full h-full transition-colors hover:bg-gray-700 flex justify-center items-center"
+              >
                 <ArrowUpOnSquareStackIcon className="aspect-auto h-full p-2" />
                 <p>Export Data</p>
               </button>
@@ -215,7 +298,10 @@ const Data = () => {
                         <button className="aspect-square p-3 h-full bg-orange-400 text-white ring-2 ring-orange-400 hover:bg-orange-500 hover:ring-orange-500 transition-colors">
                           <PencilSquareIcon />
                         </button>
-                        <button className="aspect-square p-3 h-full bg-red-600 text-white ring-2 ring-red-600 hover:bg-red-700 hover:ring-red-700 transition-colors">
+                        <button
+                          onClick={() => setDeleteId(data.uuid)}
+                          className="aspect-square p-3 h-full bg-red-600 text-white ring-2 ring-red-600 hover:bg-red-700 hover:ring-red-700 transition-colors"
+                        >
                           <TrashIcon />
                         </button>
                       </div>
@@ -246,6 +332,18 @@ const Data = () => {
           />
         )}
       </div>
+      <ModalImportData
+        assets={importedData}
+        closeCallback={(e) => {
+          setImportedData([]);
+        }}
+      />
+      <ModalDeleteAsset
+        id={deleteId}
+        closeCallback={() => {
+          setDeleteId(null);
+        }}
+      />
     </>
   );
 };
