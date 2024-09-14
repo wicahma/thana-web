@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "NODE_ENV=production node server.js",
+    "start": "NODE_ENV=production node index.js",
     "lint": "next lint"
   },
   "dependencies": {
@@ -13,6 +13,7 @@
     "@react-leaflet/core": "^2.1.0",
     "@reduxjs/toolkit": "^2.2.7",
     "@tanstack/react-table": "^8.20.1",
+    "@tmcw/togeojson": "^5.8.1",
     "axios": "^1.7.4",
     "chart.js": "^4.4.4",
     "csv": "^6.3.10",
