@@ -22,6 +22,8 @@ import {
   selectAssets,
   setAdminPreviewAsync,
   setGuestPreviewAsync,
+  setMapPolygonCreate,
+  setMapPolygonUpdate,
 } from "../../store/features/asset/assetSlice";
 import { selectLogin } from "../../store/features/auth/authSlice";
 
@@ -58,7 +60,8 @@ const DynamicMap = () => {
   const handleCBDrawer = (data) => {
     if (data[0]?.latlngs !== undefined) {
       const newData = data[0]?.latlngs.map((item) => [item.lat, item.lng]);
-      dispatch(setMapPolygon({ source: "map", coordinates: newData }));
+      dispatch(setMapPolygonCreate({ source: "map", coordinates: newData }));
+      dispatch(setMapPolygonUpdate({ source: "map", coordinates: newData }));
       dispatch(hidePanel(false));
     }
   };
@@ -85,22 +88,26 @@ const DynamicMap = () => {
           <Drawer editable={editableFG} mapLayerCallback={handleCBDrawer} />
         )}
       </FeatureGroup>
-      {assets.map((item, i) => (
-        <Polygon
-          key={i}
-          pathOptions={polyOption}
-          eventHandlers={{
-            click: () => {
-              if (user_type === "guest") {
-                dispatch(setGuestPreviewAsync(item.uuid));
-              } else {
-                dispatch(setAdminPreviewAsync(item.uuid));
-              }
-            },
-          }}
-          positions={item.koordinats.coordinates}
-        />
-      ))}
+      {assets.map((item, i) => {
+        if (item.koordinats === null) return null;
+        else
+          return (
+            <Polygon
+              key={i}
+              pathOptions={polyOption}
+              eventHandlers={{
+                click: () => {
+                  if (user_type === "guest") {
+                    dispatch(setGuestPreviewAsync(item.uuid));
+                  } else {
+                    dispatch(setAdminPreviewAsync(item.uuid));
+                  }
+                },
+              }}
+              positions={item.koordinats?.coordinates}
+            />
+          );
+      })}
     </MapContainer>
   );
 };

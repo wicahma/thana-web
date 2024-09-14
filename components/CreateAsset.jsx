@@ -1,5 +1,5 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
-import React, { useEffect, useState } from "react";
+import React, { createRef, useEffect, useState } from "react";
 import { DropdownInput, MainInput, RadioInput, TextAreaInput } from "./forms";
 import {
   BookmarkSquareIcon,
@@ -11,22 +11,39 @@ import {
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { selectLogin } from "../store/features/auth/authSlice";
 import { Form, Formik } from "formik";
-import * as yup from "yup";
 import { selectKecamatan } from "../store/features/kecamatan/kecamatanSlice";
 import { selectSkpdData } from "../store/features/skpd/skpdSlice";
 import {
   addOnePolygon,
+  addOnePolygonCreate,
   createAssetAsync,
   deleteOnePolygon,
+  deleteOnePolygonCreate,
   editMapPolygonLat,
+  editMapPolygonLatCreate,
   editMapPolygonLng,
+  editMapPolygonLngCreate,
   hidePanel,
   selectHidePanel,
   selectMapPolygon,
+  selectMapPolygonCreate,
   setListAssetAsync,
   setMapPolygon,
+  setMapPolygonCreate,
 } from "../store/features/asset/assetSlice";
 import { alertService } from "../utils/alert";
+import { assetSchema } from "../helper/validator";
+import {
+  asalUsulType,
+  initAsset,
+  kasusType,
+  kategoriType,
+  legalitasType,
+  pemanfaatanType,
+  uraianKasusType,
+} from "../helper/constant";
+import { kml } from "@tmcw/togeojson";
+import ModalImportDataKml from "./modals/ModalImportDataKml";
 
 const CreateAsset = ({ closeCallback }) => {
   const { type: user_type } = useAppSelector(selectLogin);
@@ -34,33 +51,27 @@ const CreateAsset = ({ closeCallback }) => {
   const dispatch = useAppDispatch();
   const isHidden = useAppSelector(selectHidePanel);
   const kecamatan = useAppSelector(selectKecamatan);
-  const mapPolygon = useAppSelector(selectMapPolygon);
+  const mapPolygon = useAppSelector(selectMapPolygonCreate);
   const skpd = useAppSelector(selectSkpdData);
+  const [features, setFeatures] = useState();
 
-  const assetSchema = yup.object().shape({
-    skpd_id: yup.number().required("SKPD wajib diisi"),
-    kecamatan_id: yup.number().required("Kecamatan wajib diisi"),
-    penggunaan: yup.string().required("Penggunaan wajib diisi"),
-    no_kib: yup.string().required("No. KIB wajib diisi"),
-    kode_barang: yup.string().required("Kode Barang wajib diisi"),
-    uraian: yup.string().required("Uraian wajib diisi"),
-    tanggal_perolehan: yup.string().required("Tanggal Perolehan wajib diisi"),
-    luas: yup.number().required("Luas wajib diisi"),
-    alamat: yup.string().required("Alamat wajib diisi"),
-    legalitas: yup.string().notRequired(),
-    tanggal_legalitas: yup.string().notRequired(),
-    nomor_legalitas: yup.string().notRequired(),
-    asal_usul: yup.string().required("Asal Usul wajib diisi"),
-    harga: yup.number().required("Harga wajib diisi"),
-    keterangan: yup.string().required("Keterangan wajib diisi"),
-    kategori: yup.string().required("Kategori wajib diisi"),
-    desa: yup.string().required("Desa wajib diisi"),
-    kasus: yup.boolean().required("Kasus wajib diisi"),
-    uraian_kasus: yup.string().required("Uraian Kasus wajib diisi"),
-    pemanfaatan: yup.boolean().required("Pemanfaatan wajib diisi"),
-    keterangan_lainnya: yup.string().required("Keterangan Lainnya wajib diisi"),
-  });
+  const [fileError, setFileError] = useState({ pdf: "", foto1: "", foto2: "" });
+
   const handleCreateAsset = async (val, action) => {
+    if (val.pdf_legalitas === undefined) {
+      setFileError({ pdf: "PDF Legalitas wajib diisi" });
+      return;
+    }
+    if (val.foto_1 === undefined) {
+      setFileError({ foto1: "Foto 1 wajib diisi" });
+      return;
+    }
+    if (val.foto_2 === undefined) {
+      setFileError({ foto2: "Foto 2 wajib diisi" });
+      return;
+    }
+
+    setFileError({ pdf: "", foto1: "", foto2: "" });
     if (user_type === "admin") {
       delete val.legalitas;
       delete val.tanggal_legalitas;
@@ -99,22 +110,69 @@ const CreateAsset = ({ closeCallback }) => {
     }
   };
 
+  const handleImportKml = (e) => {
+    try {
+      e.stopPropagation();
+      e.preventDefault();
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = ".kml";
+      fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const geoJson = kml(
+            new DOMParser().parseFromString(e.target.result, "text/xml"),
+            {
+              skipNullGeometry: true,
+            }
+          );
+
+          const featureCollection = geoJson.features.flat(Infinity);
+          console.log(featureCollection);
+          featureCollection.forEach((feature) => {
+            if (feature.geometry.type === "Polygon") {
+              setFeatures((prev) => {
+                if (prev === undefined) return [];
+                else
+                  return [
+                    ...prev,
+                    {
+                      ...initAsset,
+                      koordinats: feature.geometry,
+                      penggunaan: feature.properties.Nama,
+                      luas: feature.properties.Luas,
+                    },
+                  ];
+              });
+            }
+          });
+        };
+        reader.readAsText(file);
+      };
+      fileInput.click();
+    } catch (e) {
+      console.error(e);
+      alertService.error("Gagal membaca file!");
+    }
+  };
+
   const handleDeletePoly = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    dispatch(setMapPolygon({ source: "manual", coordinates: [] }));
+    dispatch(setMapPolygonCreate({ source: "manual", coordinates: [] }));
   };
 
   const handleAddManualPoly = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    dispatch(addOnePolygon([0, 0]));
+    dispatch(addOnePolygonCreate([0, 0]));
   };
 
   const handleDeletePairCoord = (e, ind) => {
     e.stopPropagation();
     e.preventDefault();
-    dispatch(deleteOnePolygon(ind));
+    dispatch(deleteOnePolygonCreate(ind));
   };
 
   useEffect(() => {
@@ -127,7 +185,11 @@ const CreateAsset = ({ closeCallback }) => {
 
   return (
     <div
-      onClick={(e) => closeCallback(true)}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeCallback(true);
+      }}
       className={`fixed z-[1100] text-base h-screen duration-300 transition-all right-0 top-0 flex justify-end  ${
         isRendered ? "block w-[50%]" : "w-0"
       } ${isHidden ? "translate-x-full" : ""}`}
@@ -155,51 +217,34 @@ const CreateAsset = ({ closeCallback }) => {
       >
         <div className="border-b border-gray-200 px-4 pb-2 pt-8 flex justify-items-start gap-3 justify-start items-center">
           <button
-            onClick={() => closeCallback(true)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              closeCallback(true);
+            }}
             className="aspect-square h-8 bg-gray-200 p-2 text-gray-600 rounded-full transition-colors hover:bg-gray-300"
           >
             <ArrowLeftIcon />
           </button>
           <h2 className="font-semibold text-xl">Input Asset </h2>
           <span className="text-sm">atau</span>
-          <button className="bg-sky-700 transition-colors hover:bg-sky-800 rounded-md text-white px-3 py-1 text-sm">
+          <button
+            onClick={handleImportKml}
+            className="bg-sky-700 transition-colors hover:bg-sky-800 rounded-md text-white px-3 py-1 text-sm"
+          >
             Import Shapefile
           </button>
           <span className="text-sm">*.kml file</span>
         </div>
         <div className="overflow-y-scroll h-full pb-32">
           <Formik
-            initialValues={{
-              skpd_id: undefined,
-              kecamatan_id: undefined,
-              penggunaan: "",
-              no_kib: "",
-              kode_barang: "",
-              uraian: "",
-              tanggal_perolehan: "",
-              luas: undefined,
-              alamat: "",
-              legalitas: "",
-              tanggal_legalitas: "",
-              nomor_legalitas: "",
-              asal_usul: undefined,
-              harga: undefined,
-              keterangan: "",
-              kategori: "",
-              fungsi: "",
-              desa: "",
-              kasus: false,
-              uraian_kasus: "",
-              pemanfaatan: false,
-              keterangan_lainnya: "",
-              foto_1: "",
-              foto_2: "",
-            }}
+            initialValues={initAsset}
             validationSchema={assetSchema}
             onSubmit={handleCreateAsset}
             validateOnChange={true}
           >
-            {({ isSubmitting, errors, values, setFieldValue }) => (
+            {({ errors, values, setFieldValue }) => (
               <Form>
                 <div className="p-3 space-y-2">
                   <h3 className="text-base font-semibold">Informasi Umum</h3>
@@ -280,22 +325,8 @@ const CreateAsset = ({ closeCallback }) => {
                   <div className="flex gap-3">
                     <DropdownInput
                       name="Asal Usul"
-                      displayValues={[
-                        "Beli",
-                        "Hibah",
-                        "Sewa",
-                        "Pinjam",
-                        "Pengadaan",
-                        "Lainnya",
-                      ]}
-                      keyValues={[
-                        "Beli",
-                        "Hibah",
-                        "Sewa",
-                        "Pinjam",
-                        "Pengadaan",
-                        "Lainnya",
-                      ]}
+                      displayValues={asalUsulType}
+                      keyValues={asalUsulType}
                       className="w-full"
                       setValue={(e) => setFieldValue("asal_usul", e)}
                       value={values.asal_usul}
@@ -372,8 +403,8 @@ const CreateAsset = ({ closeCallback }) => {
                       <DropdownInput
                         disabled={user_type === "admin"}
                         name="Legalitas"
-                        displayValues={["Sertifikat", "Non Sertifikat"]}
-                        keyValues={["Sertifikat", "Non Sertifikat"]}
+                        displayValues={legalitasType}
+                        keyValues={legalitasType}
                         value={values.legalitas}
                         className="w-full"
                         setValue={(e) => setFieldValue("legalitas", e)}
@@ -402,10 +433,35 @@ const CreateAsset = ({ closeCallback }) => {
                       <MainInput
                         disabled={user_type === "admin"}
                         name="PDF Legalitas"
+                        accept="application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                         placeholder={"PDF Legalitas"}
                         className="w-full"
                         type="file"
-                        setValue={(e) => console.log(e)}
+                        error={fileError.pdf}
+                        setValue={(e) => {
+                          const data = e.target.files[0];
+                          if (data) {
+                            if (
+                              (data.type.includes("pdf") ||
+                                data.type.includes("msword") ||
+                                data.type.includes(
+                                  "vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                )) &&
+                              data.size <= 5_000_000
+                            ) {
+                              setFileError({
+                                pdf: "",
+                              });
+                              return setFieldValue("pdf_legalitas", data);
+                            }
+                            e.target.files = null;
+                            e.target.value = "";
+                            setFileError({
+                              pdf: "Pdf wajib diisi, berjenis dokumen & kurang dari 5mb",
+                            });
+                            return setFieldValue("pdf_legalitas", undefined);
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -415,20 +471,8 @@ const CreateAsset = ({ closeCallback }) => {
                   </h3>
                   <DropdownInput
                     name="Kategori"
-                    displayValues={[
-                      "Tanah Kosong",
-                      "Bangunan",
-                      "Jalan",
-                      "Drainase",
-                      "Lainnya",
-                    ]}
-                    keyValues={[
-                      "Tanah Kosong",
-                      "Bangunan",
-                      "Jalan",
-                      "Drainase",
-                      "Lainnya",
-                    ]}
+                    displayValues={kategoriType}
+                    keyValues={kategoriType}
                     value={values.kategori}
                     error={errors.kategori}
                     className="w-full"
@@ -437,7 +481,7 @@ const CreateAsset = ({ closeCallback }) => {
                   <div className="flex gap-3">
                     <RadioInput
                       name="Kasus"
-                      displayValues={["Ada", "Tidak ada"]}
+                      displayValues={kasusType}
                       keyValues={[true, false]}
                       setValue={(e) => setFieldValue("kasus", e)}
                       value={values.kasus}
@@ -445,7 +489,7 @@ const CreateAsset = ({ closeCallback }) => {
                     />
                     <RadioInput
                       name="Pemanfaatan"
-                      displayValues={["Digunakan", "Tidak digunakan"]}
+                      displayValues={pemanfaatanType}
                       keyValues={[true, false]}
                       setValue={(e) => setFieldValue("pemanfaatan", e)}
                       value={values.pemanfaatan}
@@ -462,30 +506,8 @@ const CreateAsset = ({ closeCallback }) => {
                   </div>
                   <DropdownInput
                     name="Uraian Kasus"
-                    displayValues={[
-                      "Nihil",
-                      "Sengketa Masyarakat",
-                      "Sengketa Perusahaan",
-                      "Objek Tanah Tidak Jelas",
-                      "Kawasan Hutan",
-                      "Belum Balik Nama",
-                      "Proses Sertifikasi",
-                      "Pemanfaatan Tidak Sesuai RTRWK",
-                      "Bukti Hak Tidak Lengkap",
-                      "Data Awal belum sesuai kondisi Riil",
-                    ]}
-                    keyValues={[
-                      "Nihil",
-                      "Sengketa Masyarakat",
-                      "Sengketa Perusahaan",
-                      "Objek Tanah Tidak Jelas",
-                      "Kawasan Hutan",
-                      "Belum Balik Nama",
-                      "Proses Sertifikasi",
-                      "Pemanfaatan Tidak Sesuai RTRWK",
-                      "Bukti Hak Tidak Lengkap",
-                      "Data Awal belum sesuai kondisi Riil",
-                    ]}
+                    displayValues={uraianKasusType}
+                    keyValues={uraianKasusType}
                     value={values.uraian_kasus}
                     error={errors.uraian_kasus}
                     className="w-full"
@@ -497,15 +519,59 @@ const CreateAsset = ({ closeCallback }) => {
                       name="Foto 1"
                       type="file"
                       placeholder={"Masukkan Foto 1"}
+                      accept="image/*"
                       className="w-full"
-                      setValue={(e) => console.log(e)}
+                      setValue={(e) => {
+                        const data = e.target.files[0];
+                        if (data) {
+                          if (
+                            data.type.includes("image") &&
+                            data.size <= 5_000_000
+                          ) {
+                            setFileError({
+                              foto1: "",
+                            });
+                            return setFieldValue("foto_1", data);
+                          }
+                          e.target.files = null;
+                          e.target.value = "";
+                          setFileError({
+                            foto1:
+                              "Foto 1 wajib diisi, berjenis gambar & kurang dari 5mb",
+                          });
+                          return setFieldValue("foto_1", undefined);
+                        }
+                      }}
+                      error={fileError.foto1}
                     />
                     <MainInput
                       name="Foto 2"
                       type="file"
                       placeholder={"Masukkan Foto 2"}
+                      accept="image/*"
                       className="w-full"
-                      setValue={(e) => console.log(e)}
+                      setValue={(e) => {
+                        const data = e.target.files[0];
+                        if (data) {
+                          if (
+                            data.type.includes("image") &&
+                            data.size <= 5_000_000
+                          ) {
+                            setFileError({
+                              foto2: "",
+                            });
+                            return setFieldValue("foto_2", data);
+                          }
+                          e.target.files = null;
+                          e.target.value = "";
+                          setFileError({
+                            foto2:
+                              "Foto 2 wajib diisi, berjenis gambar & kurang dari 5mb",
+                          });
+                          return setFieldValue("foto_2", undefined);
+                        }
+                      }}
+                      error={fileError.foto2}
                     />
                   </div>
                   <div className="flex gap-3 items-center pt-5">
@@ -542,7 +608,7 @@ const CreateAsset = ({ closeCallback }) => {
                               value={val[0]}
                               setValue={(e) => {
                                 dispatch(
-                                  editMapPolygonLat({ index: i, lat: e })
+                                  editMapPolygonLatCreate({ index: i, lat: e })
                                 );
                               }}
                             />
@@ -554,7 +620,7 @@ const CreateAsset = ({ closeCallback }) => {
                               value={val[1]}
                               setValue={(e) => {
                                 dispatch(
-                                  editMapPolygonLng({ index: i, lng: e })
+                                  editMapPolygonLngCreate({ index: i, lng: e })
                                 );
                               }}
                             />
@@ -576,7 +642,7 @@ const CreateAsset = ({ closeCallback }) => {
                               disabled={true}
                               setValue={(e) => {
                                 dispatch(
-                                  editMapPolygonLat({ index: i, lat: e })
+                                  editMapPolygonLatCreate({ index: i, lat: e })
                                 );
                               }}
                             />
@@ -588,10 +654,9 @@ const CreateAsset = ({ closeCallback }) => {
                               disabled={true}
                               setValue={(e) => {
                                 dispatch(
-                                  editMapPolygonLng({ index: i, lng: e })
+                                  editMapPolygonLngCreate({ index: i, lng: e })
                                 );
                               }}
-                              s
                             />
                           </div>
                         ))}
@@ -617,6 +682,18 @@ const CreateAsset = ({ closeCallback }) => {
           </Formik>
         </div>
       </div>
+      <ModalImportDataKml
+        features={features}
+        setFeatures={setFeatures}
+        modalKmlCloseCallback={(e) => {
+          if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+          }
+          setFeatures();
+        }}
+        handleImportCallback={handleImportKml}
+      />
     </div>
   );
 };
