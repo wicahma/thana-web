@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   CalendarIcon,
   DocumentIcon,
@@ -34,7 +34,11 @@ const SideCardDetail = () => {
     }
   };
 
-  return previewAsset.penggunaan !== "" ? (
+  useEffect(() => {
+    console.log(previewAsset);
+  }, [previewAsset]);
+
+  return previewAsset.koordinats !== "" ? (
     <div
       className={`fixed top-0 z-[1200] h-screen w-fit duration-300 transition-all py-3 ${
         showNav ? "pl-3 left-0" : "pl-0 -translate-x-full"
@@ -57,9 +61,9 @@ const SideCardDetail = () => {
           <img src="" alt="Gambar" />
         </div>
         <div className="p-3">
-          <h2>{previewAsset.penggunaan}</h2>
+          <h2>{previewAsset.penggunaan ?? "Tidak ada nama"}</h2>
           <div className="flex items-center justify-items-center gap-1  text-xs">
-            <h2>{previewAsset.no_kib}</h2>
+            <h2>{previewAsset.no_kib ?? "Nomor tidak tersedia"}</h2>
             <DocumentDuplicateIcon className="h-3" />
           </div>
         </div>
@@ -89,7 +93,7 @@ const SideCardDetail = () => {
           <div className="border-t p-2 flex justify-center items-center gap-2">
             <PauseIcon className="h-6 " />
             <p>
-              {previewAsset.luas} m<sup>2</sup>
+              {previewAsset.luas ?? "0"} m<sup>2</sup>
             </p>
           </div>
           <div className="border-t border-l p-2 flex justify-center items-center gap-2">
@@ -97,21 +101,47 @@ const SideCardDetail = () => {
           </div>
           <div className="border-t p-2 flex justify-center items-center gap-2">
             <CalendarIcon className="h-6 " />
-            <p>Per {dateTimeFormatter(previewAsset.tanggal_perolehan)}</p>
+            <p>
+              Per{" "}
+              {previewAsset.tanggal_perolehan
+                ? dateTimeFormatter(previewAsset.tanggal_perolehan)
+                : "-"}
+            </p>
           </div>
           <div className="border-t border-l p-2 flex justify-center items-center gap-2">
             <CalendarIcon className="h-6 " />
             <p>
               Leg{" "}
               {previewAsset.tanggal_legalitas
-                ? dateTimeFormatter(new Date())
+                ? dateTimeFormatter(previewAsset.tanggal_legalitas)
                 : "-"}
             </p>
           </div>
           <div className="border-y col-span-2 p-2 flex justify-center items-center gap-2">
             <DocumentIcon className="h-6 " />
-            <p className="underline">Non Sertifikat</p>
+            {previewAsset.sertifikat ? (
+              <p className="underline">Bersertifikat</p>
+            ) : (
+              <p className="underline">Non Sertifikat</p>
+            )}
           </div>
+        </div>
+        <div className="p-3 text-sm text-gray-700">
+          <p>Desa : {previewAsset.desa ?? "-"}</p>
+          <p>Legalitas : {previewAsset.legalitas ?? "-"}</p>
+          <p>No. Legalitas : {previewAsset.nomor_legalitas ?? "-"}</p>
+          <p>Alamat : {previewAsset.alamat ?? "-"}</p>
+          <p>Asal usul : {previewAsset.asal_usul ?? "-"}</p>
+          <p>Kategori : {previewAsset.kategori ?? "-"}</p>
+          <p>Keterangan : {previewAsset.keterangan ?? "-"}</p>
+          <p>Keterangan Lainnya : {previewAsset.keterangan_lainnya ?? "-"}</p>
+          <p>Pemanfaatan : {previewAsset.pemanfaatan ? "Digunakan" : "Tidak Digunakan"}</p>
+          <p>Uraian : {previewAsset.uraian ?? "-"}</p>
+          <p>Uraian kasus : {previewAsset.uraian_kasus ?? "-"}</p>
+          <p>
+            Terakhir Diupdate :{" "}
+            {dateTimeFormatter(previewAsset.updatedAt) ?? "-"}
+          </p>
         </div>
       </div>
       <div
@@ -129,3 +159,18 @@ const SideCardDetail = () => {
 };
 
 export default SideCardDetail;
+
+// alamat: null
+// asal_usul: null
+// createdAt: "2024-09-13T09:32:23.000Z"
+// desa: null​
+// kategori: null
+// keterangan: null
+// keterangan_lainnya: null
+// legalitas: null
+// no_kib: null
+// nomor_legalitas: null
+// pemanfaatan: false
+// updatedAt: "2024-09-13T09:32:23.000Z"
+// uraian: null
+// uraian_kasus: null
