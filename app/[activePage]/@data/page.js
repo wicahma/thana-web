@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/solid";
 import {
   ArrowDownOnSquareStackIcon,
@@ -9,9 +9,13 @@ import {
   XMarkIcon,
 } from "@heroicons/react/20/solid";
 import {
+  checkAssetLoading,
+  hidePanel,
   selectAssets,
+  selectAssetsUndone,
   selectHidePanel,
   setAllAssetAsync,
+  setEditAsset,
   setListAssetAsync,
 } from "../../../store/features/asset/assetSlice";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
@@ -24,19 +28,21 @@ import { json2csv } from "json-2-csv";
 import { selectLogin } from "../../../store/features/auth/authSlice";
 import { downloadBlob } from "../../../utils/downloader";
 import { parse } from "csv-parse";
-import ModalImportData from "../../../components/modals/ModalImportData";
+import ModalImportDataCsv from "../../../components/modals/ModalImportDataCsv";
 import ModalDeleteAsset from "../../../components/modals/ModalDeleteAsset";
+import ModalEditAsset from "../../../components/modals/ModalEditAsset";
 
 const Data = () => {
+  const dispatch = useAppDispatch();
   const [extendedView, setExtendedView] = useState(false);
   const [dataEditIdentifier, setDataEditIdentifier] = useState(null);
+  const { edit_asset_status } = useAppSelector(checkAssetLoading);
   const assets = useAppSelector(selectAssets);
   const { type } = useAppSelector(selectLogin);
   const isHidden = useAppSelector(selectHidePanel);
-  const [importedData, setImportedData] = useState([]);
+  const [importedData, setImportedData] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
-
-  const dispatch = useAppDispatch();
+  const [editId, setEditId] = useState(null);
 
   useEffect(() => {
     dispatch(setListAssetAsync()).then((res) => {
@@ -71,7 +77,6 @@ const Data = () => {
   };
 
   const handleImportData = () => {
-    setImportedData([]);
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.accept = ".csv";
@@ -79,6 +84,7 @@ const Data = () => {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onload = async (e) => {
+        setImportedData([]);
         const csv = e.target.result;
         const data = parse(
           csv,
@@ -90,6 +96,9 @@ const Data = () => {
               if (ctx.column === "koordinats.coordinates") {
                 def = JSON.parse(val);
               }
+              if (ctx.column === "kasus") def = val === "1" ? false : true;
+              if (ctx.column === "pemanfaatan")
+                def = val === "1" ? false : true;
               return def;
             },
           },
@@ -230,42 +239,82 @@ const Data = () => {
               </thead>
               <tbody className="text-gray-900">
                 {assets.map((data, i) => (
-                  <tr key={i}>
+                  <tr key={i} className="group relative">
                     <td className="rounded-s-lg border-l border-y px-3 h-12 border-gray-200">
-                      {data.penggunaan}
+                      {(data.penggunaan === null ||
+                        data.skpd === null ||
+                        typeof data.koordinats !== "object") && (
+                        <span className="group-hover:opacity-100 cursor-pointer leading-4 overflow-hidden gap-3 w-full z-10 transition-opacity flex justify-between ps-5 items-center bg-gray-800/60 backdrop-blur-md text-sm text-gray-100 rounded-md absolute left-0 top-0 h-full opacity-0 mx-auto">
+                          <p>
+                            Data belum lengkap, silahkan lengkapi data dengan
+                            cara mengedit data terlebih dahulu.
+                          </p>
+                          <div className="flex flex-nowrap h-full aspect-[2/1]">
+                            <button
+                              onClick={() => setEditId(data.uuid)}
+                              className="aspect-square p-3 h-full bg-orange-400 text-white ring-0 ring-orange-400 hover:bg-orange-500 hover:ring-orange-500 transition-colors"
+                            >
+                              {edit_asset_status.includes("loading") &&
+                              data.uuid === editId ? (
+                                <div className="loader border-white" />
+                              ) : (
+                                <PencilSquareIcon />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setDeleteId(data.uuid)}
+                              className="aspect-square p-3 h-full bg-red-600 text-white ring-0 ring-red-600 hover:bg-red-700 hover:ring-red-700 transition-colors"
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
+                        </span>
+                      )}
+                      {data.penggunaan || "-"}
                     </td>
                     <td className="max-w-32 border-y px-3 h-12">
-                      <p className="line-clamp-1 break-all">{data.skpd.nama}</p>
+                      <p className="line-clamp-1 break-all">
+                        {data.skpd?.nama || "-"}
+                      </p>
                     </td>
                     {extendedView ? (
                       <>
                         <td className="max-w-24 border-y px-3 h-12">
                           <p className="line-clamp-1 break-all">
-                            {data.kecamatan.nama}
+                            {data.kecamatan?.nama || "-"}
                           </p>
-                        </td>
-                        <td className="max-w-24 border-y px-3 h-12">
-                          <p className="line-clamp-1 break-all">{data.desa}</p>
                         </td>
                         <td className="max-w-24 border-y px-3 h-12">
                           <p className="line-clamp-1 break-all">
-                            {data.alamat}
+                            {data.desa || "-"}
                           </p>
                         </td>
-                        <td className=" border-y px-3 h-12">{data.leglitas}</td>
+                        <td className="max-w-24 border-y px-3 h-12">
+                          <p className="line-clamp-1 break-all">
+                            {data.alamat || "-"}
+                          </p>
+                        </td>
+                        <td className=" border-y px-3 h-12">
+                          {data.leglitas || "-"}
+                        </td>
                         <td className="border-y h-12">
                           <div
                             className={`${
-                              data.kasus
+                              data.kasus && data.kasus !== undefined
                                 ? "ring-red-600 bg-red-600 text-red-200"
                                 : "ring-lime-400 bg-lime-400 text-lime-900"
+                            } ${
+                              data.kasus === undefined
+                                ? "ring-gray-400 bg-gray-400 text-gray-700"
+                                : ""
                             } ring-2 flex justify-center items-center aspect-square h-full`}
                           >
-                            {data.kasus ? (
+                            {data.kasus && data.kasus !== undefined ? (
                               <CheckIcon className="aspect-auto h-5" />
                             ) : (
                               <XMarkIcon className="aspect-auto h-5" />
                             )}
+                            {data.kasus === undefined && <p>-</p>}
                           </div>
                         </td>
                         <td className=" border-y px-3 h-12 max-w-32">
@@ -279,24 +328,37 @@ const Data = () => {
                         <td className="border-y h-12">
                           <div
                             className={`${
-                              data.kasus
+                              data.kasus && data.kasus !== undefined
                                 ? "ring-red-600 bg-red-600 text-red-200"
                                 : "ring-lime-400 bg-lime-400 text-lime-900"
+                            } ${
+                              data.kasus === undefined
+                                ? "ring-gray-400 bg-gray-400 text-gray-700"
+                                : ""
                             } ring-2 flex justify-center items-center aspect-square h-full`}
                           >
-                            {data.kasus ? (
+                            {data.kasus && data.kasus !== undefined ? (
                               <CheckIcon className="aspect-auto h-5" />
                             ) : (
                               <XMarkIcon className="aspect-auto h-5" />
                             )}
+                            {data.kasus === undefined && <p>-</p>}
                           </div>
                         </td>
                       </>
                     )}
                     <td className="border-y h-12 max-w-fit">
                       <div className="flex flex-nowrap h-full aspect-[2/1]">
-                        <button className="aspect-square p-3 h-full bg-orange-400 text-white ring-2 ring-orange-400 hover:bg-orange-500 hover:ring-orange-500 transition-colors">
-                          <PencilSquareIcon />
+                        <button
+                          onClick={() => setEditId(data.uuid)}
+                          className="aspect-square p-3 h-full bg-orange-400 text-white ring-2 ring-orange-400 hover:bg-orange-500 hover:ring-orange-500 transition-colors"
+                        >
+                          {edit_asset_status.includes("loading") &&
+                          data.uuid === editId ? (
+                            <div className="loader border-white" />
+                          ) : (
+                            <PencilSquareIcon />
+                          )}
                         </button>
                         <button
                           onClick={() => setDeleteId(data.uuid)}
@@ -314,8 +376,7 @@ const Data = () => {
               </tbody>
             </table>
           </div>
-          <div className="h-fit w-full bg-white absolute bottom-0 p-3 pb-4 border-t border-gray-200 flex justify-end">
-            {extendedView ?? <p>Anying</p>}
+          <div className="h-fit w-full bg-white absolute bottom-0 p-3 pb-4 border-t border-gray-200 flex justify-end z-20">
             <button
               onClick={() => setExtendedView(!extendedView)}
               className="underline text-gray-500"
@@ -327,21 +388,32 @@ const Data = () => {
       </div>
       <div>
         {dataEditIdentifier === "asset" && (
-          <CreateAsset
-            closeCallback={(isClose) => setDataEditIdentifier(null)}
-          />
+          <CreateAsset closeCallback={() => setDataEditIdentifier(null)} />
         )}
       </div>
-      <ModalImportData
+      <ModalImportDataCsv
         assets={importedData}
         closeCallback={(e) => {
-          setImportedData([]);
+          setImportedData(null);
         }}
+        handleImportCallback={handleImportData}
       />
       <ModalDeleteAsset
         id={deleteId}
         closeCallback={() => {
           setDeleteId(null);
+        }}
+      />
+      <ModalEditAsset
+        id={editId}
+        closeCallback={() => {
+          setEditId(null);
+          dispatch(
+            setEditAsset({
+              isReset: true,
+            })
+          );
+          dispatch(hidePanel(false));
         }}
       />
     </>

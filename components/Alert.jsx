@@ -86,7 +86,7 @@ const Alert = ({ id = "default-alert", fade = true }) => {
     classes.push(alertTypeClass[alert.type]);
 
     if (alert.fade) {
-      classes.push("animate-slide-out");
+      classes.push("animate-bounce-out");
     }
 
     return classes.join(" ");
@@ -100,13 +100,16 @@ const Alert = ({ id = "default-alert", fade = true }) => {
         <div
           role="alert"
           key={index}
-          className={`flex animate-fade-in gap-2 justify-between items-center  ${cssClasses(
+          className={`flex animate-bounce-in rounded-lg shadow-lg min-w-80 min-h-12 gap-2 ps-5 justify-between items-center overflow-hidden ${cssClasses(
             alert
           )}`}
         >
-          <span dangerouslySetInnerHTML={{ __html: alert.message }}></span>
+          <span
+            className="py-2"
+            dangerouslySetInnerHTML={{ __html: alert.message }}
+          ></span>
           <button
-            className="cursor-pointer p-2 aspect-square h-8 hover:bg-black/15 transition-colors duration-300 flex items-center justify-center bg-black/5 rounded-md text-black/20"
+            className="cursor-pointer p-3 aspect-square min-h-12 h-full hover:bg-black/15 transition-colors duration-300 flex items-center justify-center bg-black/10 text-black/80"
             onClick={() => removeAlert(alert)}
           >
             <XMarkIcon />
