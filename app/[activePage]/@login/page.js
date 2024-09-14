@@ -38,7 +38,7 @@ const Login = () => {
   const handleLogin = async (val, action) => {
     dispatch(loginAsync({ email: val.email, pass: val.password })).then(
       (res) => {
-        if (res.payload.status === true) {
+        if (res.payload.status) {
           router.replace("/");
         } else {
           alertService.error(res.payload.message);
@@ -55,7 +55,7 @@ const Login = () => {
 
 
   return (
-    <div className="fixed flex justify-center items-center z-[500] bg-black/50 h-screen w-screen top-0 left-0">
+    <div className="fixed flex justify-center items-center z-[500] bg-black/50 backdrop-blur-sm h-screen w-screen top-0 left-0">
       <div className="p-3 bg-white rounded-xl w-80">
         <h1 className="text-xl font-semibold text-center mb-3">
           Phatox Negara
@@ -135,7 +135,7 @@ const Login = () => {
                 {login_status.includes("loading") && (
                   <div className="loader border-white" />
                 )}
-                MASUK
+                Masuk
               </button>
             </Form>
           )}

@@ -26,15 +26,11 @@ export default function NavLayout({
   useEffect(() => {
     if (type !== "guest" || access) {
       dispatch(checkToken()).then((checkLogin) => {
-        console.log("ini di nav layout", checkLogin);
-        if (!checkLogin.payload.status) {
-          router.replace("/login");
-        }
+        if (!checkLogin.payload) return router.replace("/login");
+        if (!checkLogin.payload.status) return router.replace("/login");
       });
     }
   }, [path]);
-
-  
 
   return (
     <>
