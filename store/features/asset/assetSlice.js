@@ -1,5 +1,6 @@
 import { createAppSlice } from "../../createAppSlice";
 import {
+  bulkCreateAsset,
   createAsset,
   deleteAsset,
   detailAdmin,
@@ -10,322 +11,7 @@ import {
   updateAsset,
 } from "./assetAPI";
 
-const dummy_asset = [
-  {
-    uuid: "1",
-    penggunaan: "pertanian",
-    skpd: "Dinas Pertanian",
-    kecamatan: "Ngemplak",
-    desa: "Ngemplak",
-    alamat: "Jl. Raya Ngemplak",
-    leglitas: "Sertifikat",
-    kasus: false,
-    uraian_kasus: "",
-    updatedAt: "2021-08-21",
-  },
-  {
-    uuid: "2",
-    penggunaan: "perumahan",
-    skpd: "Dinas Perumahan dan Permukiman",
-    kecamatan: "Depok",
-    desa: "Caturharjo",
-    alamat: "Jl. Kaliurang KM 7",
-    leglitas: "SHM",
-    kasus: true,
-    uraian_kasus: "Sengketa lahan dengan warga",
-    updatedAt: "2021-09-10",
-  },
-  {
-    uuid: "3",
-    penggunaan: "perdagangan",
-    skpd: "Dinas Perdagangan",
-    kecamatan: "Sleman",
-    desa: "Tridadi",
-    alamat: "Jl. Magelang KM 10",
-    leglitas: "Sertifikat",
-    kasus: false,
-    uraian_kasus: "",
-    updatedAt: "2021-10-05",
-  },
-  {
-    uuid: "4",
-    penggunaan: "industri",
-    skpd: "Dinas Perindustrian",
-    kecamatan: "Mlati",
-    desa: "Tirtoadi",
-    alamat: "Jl. Magelang KM 8",
-    leglitas: "SHGB",
-    kasus: false,
-    uraian_kasus: "",
-    updatedAt: "2021-11-15",
-  },
-  {
-    uuid: "5",
-    penggunaan: "pariwisata",
-    skpd: "Dinas Pariwisata",
-    kecamatan: "Pakem",
-    desa: "Hargobinangun",
-    alamat: "Jl. Kaliurang KM 20",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Tumpang tindih dengan lahan warga",
-    updatedAt: "2022-01-12",
-  },
-  {
-    uuid: "6",
-    penggunaan: "kesehatan",
-    skpd: "Dinas Kesehatan",
-    kecamatan: "Gamping",
-    desa: "Ambarketawang",
-    alamat: "Jl. Wates KM 5",
-    leglitas: "Sertifikat",
-    kasus: false,
-    uraian_kasus: "",
-    updatedAt: "2022-03-07",
-  },
-  {
-    uuid: "7",
-    penggunaan: "pendidikan",
-    skpd: "Dinas Pendidikan",
-    kecamatan: "Godean",
-    desa: "Sidokarto",
-    alamat: "Jl. Godean KM 8",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Sengketa dengan pihak ketiga",
-    updatedAt: "2022-04-18",
-  },
-  {
-    uuid: "8",
-    penggunaan: "perikanan",
-    skpd: "Dinas Kelautan dan Perikanan",
-    kecamatan: "Berbah",
-    desa: "Kalitirto",
-    alamat: "Jl. Berbah - Prambanan",
-    leglitas: "SHM",
-    kasus: false,
-    uraian_kasus: "",
-    updatedAt: "2022-05-23",
-  },
-  {
-    uuid: "9",
-    penggunaan: "kehutanan",
-    skpd: "Dinas Kehutanan",
-    kecamatan: "Tempel",
-    desa: "Lumbungrejo",
-    alamat: "Jl. Tempel - Turi",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Pelanggaran kawasan hutan lindung",
-    updatedAt: "2022-07-14",
-  },
-  {
-    uuid: "10",
-    penggunaan: "transportasi",
-    skpd: "Dinas Perhubungan",
-    kecamatan: "Kalasan",
-    desa: "Tirtomartani",
-    alamat: "Jl. Solo KM 10",
-    leglitas: "SHGB",
-    kasus: false,
-    uraian_kasus: "",
-    updatedAt: "2022-08-29",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-  {
-    uuid: "11",
-    penggunaan: "pertambangan",
-    skpd: "Dinas Energi dan Sumber Daya Mineral",
-    kecamatan: "Prambanan",
-    desa: "Bokoharjo",
-    alamat: "Jl. Prambanan - Piyungan",
-    leglitas: "Sertifikat",
-    kasus: true,
-    uraian_kasus: "Izin tambang yang belum lengkap",
-    updatedAt: "2022-09-17",
-  },
-];
-
-const initialState = {
+export const assetInitState = {
   is_panel_hide: false,
   api_status: {
     get_asset_status: "idle",
@@ -335,6 +21,37 @@ const initialState = {
     delete_asset_status: "idle",
     detailguest_asset_status: "idle",
     detailadmin_asset_status: "idle",
+    create_bulk_asset_status: "idle",
+    edit_asset_status: "idle",
+    set_preview_asset_admin_status: "idle",
+    set_preview_asset_guest_status: "idle",
+  },
+  editAsset: {
+    penggunaan: "",
+    no_kib: "",
+    uraian: "",
+    tanggal_perolehan: "",
+    luas: 0,
+    alamat: "",
+    legalitas: "",
+    tanggal_legalitas: "",
+    nomor_legalitas: "",
+    asal_usul: "",
+    harga: 0,
+    keterangan: "",
+    kategori: "",
+    desa: "",
+    kasus: false,
+    uraian_kasus: "",
+    pemanfaatan: false,
+    keterangan_lainnya: "",
+    foto_1: "",
+    foto_2: "",
+    koordinats: "",
+    kecamatan_id: 0,
+    skpd_id: 0,
+    createdAt: "",
+    updatedAt: "",
   },
   previewAsset: {
     penggunaan: "",
@@ -373,7 +90,11 @@ const initialState = {
     kecamatan: [],
     skpd: [],
   },
-  mapPolygon: {
+  mapPolygonCreate: {
+    source: "manual",
+    coordinates: [[0, 0]],
+  },
+  mapPolygonUpdate: {
     source: "manual",
     coordinates: [[0, 0]],
   },
@@ -381,10 +102,10 @@ const initialState = {
 
 export const assetSlice = createAppSlice({
   name: "asset",
-  initialState,
+  initialState: assetInitState,
   reducers: (create) => ({
     resetPreviewAsset: create.reducer((state) => {
-      state.previewAsset = initialState.previewAsset;
+      state.previewAsset = assetInitState.previewAsset;
     }),
 
     setGuestPreviewAsync: create.asyncThunk(
@@ -394,14 +115,14 @@ export const assetSlice = createAppSlice({
       },
       {
         pending: (state) => {
-          state.previewAsset.status = "loading";
+          state.api_status.set_preview_asset_guest_status = "loading";
         },
         fulfilled: (state, action) => {
-          state.previewAsset.status = "idle";
+          state.api_status.set_preview_asset_guest_status = "idle";
           state.previewAsset = action.payload.data[0];
         },
         rejected: (state) => {
-          state.previewAsset.status = "failed";
+          state.api_status.set_preview_asset_guest_status = "failed";
         },
       }
     ),
@@ -412,14 +133,32 @@ export const assetSlice = createAppSlice({
       },
       {
         pending: (state) => {
-          state.previewAsset.status = "loading";
+          state.api_status.set_preview_asset_admin_status = "loading";
         },
         fulfilled: (state, action) => {
-          state.previewAsset.status = "idle";
+          state.api_status.set_preview_asset_admin_status = "idle";
           state.previewAsset = action.payload.data[0];
         },
         rejected: (state) => {
-          state.previewAsset.status = "failed";
+          state.api_status.set_preview_asset_admin_status = "failed";
+        },
+      }
+    ),
+    setAdminDetailUpdateAsync: create.asyncThunk(
+      async (data) => {
+        const response = await detailAdmin(data);
+        return response;
+      },
+      {
+        pending: (state) => {
+          state.api_status.edit_asset_status = "loading";
+        },
+        fulfilled: (state, action) => {
+          state.api_status.edit_asset_status = "idle";
+          state.editAsset = action.payload.data[0];
+        },
+        rejected: (state) => {
+          state.api_status.edit_asset_status = "failed";
         },
       }
     ),
@@ -495,6 +234,24 @@ export const assetSlice = createAppSlice({
       }
     ),
 
+    createBulkAsset: create.asyncThunk(
+      async ({ data, type }) => {
+        const response = await bulkCreateAsset(data, type);
+        return response;
+      },
+      {
+        pending: (state) => {
+          state.api_status.create_bulk_asset_status = "loading";
+        },
+        fulfilled: (state) => {
+          state.api_status.create_bulk_asset_status = "idle";
+        },
+        rejected: (state) => {
+          state.api_status.create_bulk_asset_status = "failed";
+        },
+      }
+    ),
+
     updateAssetAsync: create.asyncThunk(
       async (data) => {
         const response = await updateAsset(data);
@@ -530,32 +287,65 @@ export const assetSlice = createAppSlice({
         },
       }
     ),
+    setEditAsset: create.reducer((state, action) => {
+      if (action.payload.isReset === true) {
+        state.editAsset = assetInitState.editAsset;
+        return;
+      }
+      state.editAsset = action.payload.data;
+    }),
     hidePanel: create.reducer((state, action) => {
       state.is_panel_hide = action.payload;
     }),
-    setMapPolygon: create.reducer((state, action) => {
+    setMapPolygonCreate: create.reducer((state, action) => {
       const { source = "manual", coordinates } = action.payload;
-      state.mapPolygon = { source, coordinates };
+      state.mapPolygonCreate = { source, coordinates };
     }),
-    editMapPolygonLat: create.reducer((state, action) => {
-      state.mapPolygon.coordinates[action.payload.index] = [
+    editMapPolygonLatCreate: create.reducer((state, action) => {
+      state.mapPolygonCreate.coordinates[action.payload.index] = [
         action.payload.lat,
-        state.mapPolygon.coordinates[action.payload.index][1],
+        state.mapPolygonCreate.coordinates[action.payload.index][1],
       ];
     }),
-    editMapPolygonLng: create.reducer((state, action) => {
-      state.mapPolygon.coordinates[action.payload.index] = [
-        state.mapPolygon.coordinates[action.payload.index][0],
+    editMapPolygonLngCreate: create.reducer((state, action) => {
+      state.mapPolygonCreate.coordinates[action.payload.index] = [
+        state.mapPolygonCreate.coordinates[action.payload.index][0],
         action.payload.lng,
       ];
     }),
-    addOnePolygon: create.reducer((state, action) => {
-      state.mapPolygon.coordinates.push(action.payload);
+    addOnePolygonCreate: create.reducer((state, action) => {
+      state.mapPolygonCreate.coordinates.push(action.payload);
     }),
-    deleteOnePolygon: create.reducer((state, action) => {
-      state.mapPolygon.coordinates = state.mapPolygon.coordinates.filter(
-        (p, i) => i !== action.payload
-      );
+    deleteOnePolygonCreate: create.reducer((state, action) => {
+      state.mapPolygonCreate.coordinates =
+        state.mapPolygonCreate.coordinates.filter(
+          (p, i) => i !== action.payload
+        );
+    }),
+    setMapPolygonUpdate: create.reducer((state, action) => {
+      const { source = "manual", coordinates } = action.payload;
+      state.mapPolygonUpdate = { source, coordinates };
+    }),
+    editMapPolygonLatUpdate: create.reducer((state, action) => {
+      state.mapPolygonUpdate.coordinates[action.payload.index] = [
+        action.payload.lat,
+        state.mapPolygonUpdate.coordinates[action.payload.index][1],
+      ];
+    }),
+    editMapPolygonLngUpdate: create.reducer((state, action) => {
+      state.mapPolygonUpdate.coordinates[action.payload.index] = [
+        state.mapPolygonUpdate.coordinates[action.payload.index][0],
+        action.payload.lng,
+      ];
+    }),
+    addOnePolygonUpdate: create.reducer((state, action) => {
+      state.mapPolygonUpdate.coordinates.push(action.payload);
+    }),
+    deleteOnePolygonUpdate: create.reducer((state, action) => {
+      state.mapPolygonUpdate.coordinates =
+        state.mapPolygonUpdate.coordinates.filter(
+          (p, i) => i !== action.payload
+        );
     }),
   }),
   selectors: {
@@ -573,7 +363,9 @@ export const assetSlice = createAppSlice({
         (asset) => asset.legalitas !== "sertifikat"
       ),
     selectHidePanel: (state) => state.is_panel_hide,
-    selectMapPolygon: (state) => state.mapPolygon,
+    selectMapPolygonCreate: (state) => state.mapPolygonCreate,
+    selectMapPolygonUpdate: (state) => state.mapPolygonUpdate,
+    selectEditAsset: (state) => state.editAsset,
   },
 });
 
@@ -582,17 +374,26 @@ export const {
   deleteAssetAsync,
   setAdminPreviewAsync,
   setGuestPreviewAsync,
+  setAdminDetailUpdateAsync,
   setListAssetAsync,
   updateAssetAsync,
   getDashboardAsync,
   hidePanel,
-  setMapPolygon,
-  editMapPolygonLat,
-  editMapPolygonLng,
-  addOnePolygon,
-  deleteOnePolygon,
+  setMapPolygonCreate,
+  editMapPolygonLatCreate,
+  editMapPolygonLngCreate,
+  addOnePolygonCreate,
+  createBulkAsset,
+  deleteOnePolygonCreate,
+  setMapPolygonUpdate,
+  editMapPolygonLatUpdate,
+  editMapPolygonLngUpdate,
+  addOnePolygonUpdate,
+  createBulUpdate,
+  deleteOnePolygonUpdate,
   setAllAssetAsync,
   resetPreviewAsset,
+  setEditAsset,
 } = assetSlice.actions;
 
 export const {
@@ -603,6 +404,8 @@ export const {
   selectAssetSertifikat,
   selectAssetNonSertifikat,
   selectHidePanel,
-  selectMapPolygon,
+  selectMapPolygonCreate,
+  selectMapPolygonUpdate,
   selectAllAssets,
+  selectEditAsset,
 } = assetSlice.selectors;

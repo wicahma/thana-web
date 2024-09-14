@@ -1,6 +1,6 @@
 import { createAppSlice } from "../../createAppSlice";
 import { getList } from "./kecamatanAPI";
-const initialState = {
+export const kecamatanInitState = {
   api_status: {
     list_kecamatan_status: "idle",
     create_kecamatan_status: "idle",
@@ -12,10 +12,10 @@ const initialState = {
 
 export const kecamatanSlice = createAppSlice({
   name: "kecamatan",
-  initialState,
+  initialState: kecamatanInitState,
   reducers: (create) => ({
     clearKecamatan: create.reducer((state) => {
-      state.kecamatan_data = initialState.kecamatan_data;
+      state.kecamatan_data = kecamatanInitState.kecamatan_data;
     }),
 
     getListKecAsync: create.asyncThunk(

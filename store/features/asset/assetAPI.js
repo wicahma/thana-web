@@ -44,31 +44,64 @@ export const getDashbard = async () => {
 };
 
 export const createAsset = async (data) => {
+  const formData = new FormData();
+
+  Object.entries(data).map(([key, value]) => {
+    if (key === "koordinats") {
+      return formData.append(key, JSON.stringify(value));
+    }
+    formData.append(key, value);
+  });
+
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}api/asset/create`,
     {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("access")}`,
       },
-      body: JSON.stringify(data),
+      body: formData,
     }
   );
   const result = await response.json();
   return result;
 };
 
-export const updateAsset = async (data, uuid) => {
+export const bulkCreateAsset = async (data, type) => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}api/asset/update/${uuid}`,
+    `${process.env.NEXT_PUBLIC_API_URL}api/asset/bulk-create`,
     {
-      method: "PUT",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("access")}`,
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ datas: data, type: type }),
+    }
+  );
+  const result = await response.json();
+  return result;
+};
+
+export const updateAsset = async (data) => {
+  const formData = new FormData();
+
+  Object.entries(data).map(([key, value]) => {
+    if (key === "koordinats") {
+      return formData.append(key, JSON.stringify(value));
+    }
+    formData.append(key, value);
+  });
+
+  console.log(formData);
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}api/asset/update/${data.uuid}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access")}`,
+      },
+      body: formData,
     }
   );
   const result = await response.json();
@@ -104,7 +137,7 @@ export const detailGuest = async (uuid) => {
 
 export const detailAdmin = async (uuid) => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}api/asset/detail-guest/${uuid}`,
+    `${process.env.NEXT_PUBLIC_API_URL}api/asset/detail/${uuid}`,
     {
       method: "GET",
       headers: {

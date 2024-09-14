@@ -1,6 +1,6 @@
 import { createAppSlice } from "../../createAppSlice";
 import { createSkpd, deleteSkpd, getList, updateSkpd } from "./skpdAPI";
-const initialState = {
+export const skpdInitState = {
   skpd_data: [],
   api_status: {
     list_skpd_status: "idle",
@@ -12,10 +12,10 @@ const initialState = {
 
 export const skpdSlice = createAppSlice({
   name: "skpd",
-  initialState,
+  initialState: skpdInitState,
   reducers: (create) => ({
     clearSkpd: create.reducer((state) => {
-      state.skpd_data = initialState.skpd_data;
+      state.skpd_data = skpdInitState.skpd_data;
     }),
 
     getListSkpdAsync: create.asyncThunk(

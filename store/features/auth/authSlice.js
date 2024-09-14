@@ -1,7 +1,6 @@
 import { createAppSlice } from "../../createAppSlice";
 import { getProfile, login, logout } from "./authAPI";
-
-const initialState = {
+export const authInitState = {
   api_status: {
     login_status: "idle",
     logout_status: "idle",
@@ -23,10 +22,10 @@ const initialState = {
 
 export const authSlice = createAppSlice({
   name: "auth",
-  initialState,
+  initialState: authInitState,
   reducers: (create) => ({
     clearLogin: create.reducer((state) => {
-      state.login_data = initialState.login_data;
+      state.login_data = authInitState.login_data;
     }),
 
     checkToken: create.asyncThunk(
@@ -126,7 +125,7 @@ export const authSlice = createAppSlice({
           state.api_status.logout_status = "loading";
         },
         fulfilled: (state) => {
-          state.login_data = initialState.login_data;
+          state.login_data = authInitState.login_data;
           localStorage.removeItem("access");
           localStorage.removeItem("refresh");
         },
