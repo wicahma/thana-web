@@ -3,19 +3,19 @@
 @tailwind utilities;
 
 .alert-info {
-  @apply bg-blue-100 text-blue-900;
+  @apply bg-blue-200 border border-blue-300;
 }
 
 .alert-error {
-  @apply bg-red-100 text-red-900 rounded-lg px-2 pl-3 min-w-80 min-h-12 shadow-lg;
+  @apply bg-red-200 border border-red-300;
 }
 
 .alert-success {
-  @apply bg-green-100 text-green-900;
+  @apply bg-lime-200 border border-lime-300;
 }
 
 .alert-warning {
-  @apply bg-yellow-100 text-yellow-900;
+  @apply bg-yellow-200 border border-yellow-300;
 }
 
 .loader {
